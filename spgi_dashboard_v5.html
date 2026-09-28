@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPGI — S&P Global Research</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f5f7; --surface: #fff; --s2: #f5f5f7; --s3: #e8e8ed; --s4: #d2d2d7;
+  --tx: #1d1d1f; --tx2: #6e6e73; --tx3: #aeaeb2;
+  --blue: #0071e3; --blue-l: rgba(0,113,227,0.09);
+  --gn: #28a745; --gn-l: rgba(40,167,69,0.1); --gn-d: #1a6b2e;
+  --am: #c87d00; --am-l: rgba(200,125,0,0.1); --am-r: #ff9f0a;
+  --rd: #d00; --rd-l: rgba(204,0,0,0.08); --rd-r: #ff3b30;
+  --pu: #7d3fd1; --pu-l: rgba(125,63,209,0.09);
+  --sans: -apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;
+  --mono: 'SF Mono','Fira Code',ui-monospace,monospace;
+  --sh0: 0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --sh1: 0 4px 24px rgba(0,0,0,0.07),0 1px 4px rgba(0,0,0,0.04);
+  --sh2: 0 12px 40px rgba(0,0,0,0.1),0 2px 8px rgba(0,0,0,0.06);
+}
+body.dark {
+  --bg: #000; --surface: #1c1c1e; --s2: #2c2c2e; --s3: #3a3a3c; --s4: #48484a;
+  --tx: #f5f5f7; --tx2: #98989d; --tx3: #636366;
+  --blue: #0a84ff; --blue-l: rgba(10,132,255,0.14);
+  --gn: #30d158; --gn-l: rgba(48,209,88,0.13); --gn-d: #30d158;
+  --am: #ffd60a; --am-l: rgba(255,214,10,0.12); --am-r: #ffd60a;
+  --rd: #ff453a; --rd-l: rgba(255,69,58,0.12); --rd-r: #ff453a;
+  --pu: #bf5af2; --pu-l: rgba(191,90,242,0.12);
+  --sh0: 0 1px 3px rgba(0,0,0,0.25); --sh1: 0 4px 24px rgba(0,0,0,0.35); --sh2: 0 12px 40px rgba(0,0,0,0.5);
+}
+body { font-family:var(--sans); background:var(--bg); color:var(--tx); font-size:15px; line-height:1.47; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background .3s,color .3s; }
+
+/* HEADER */
+.hdr { position:sticky; top:0; z-index:300; height:52px; padding:0 40px; display:flex; align-items:center; gap:0; background:rgba(255,255,255,0.82); backdrop-filter:saturate(180%) blur(24px); -webkit-backdrop-filter:saturate(180%) blur(24px); border-bottom:0.5px solid var(--s3); transition:background .3s; }
+body.dark .hdr { background:rgba(28,28,30,0.82); }
+.hdr-ticker { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--tx); margin-right:10px; }
+.hdr-name { font-size:13px; color:var(--tx2); margin-right:auto; }
+.hdr-pills { display:flex; gap:20px; font-size:12px; color:var(--tx2); font-variant-numeric:tabular-nums; }
+.hdr-pills b { color:var(--tx); font-weight:600; }
+.hdr-r { display:flex; align-items:center; gap:10px; margin-left:20px; }
+.vchip { font-size:11px; font-weight:700; letter-spacing:.02em; padding:4px 12px; border-radius:20px; background:var(--am-l); color:var(--am); }
+.tbtn { width:32px; height:32px; border-radius:50%; background:var(--s2); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--tx2); transition:background .2s,transform .15s; }
+.tbtn:hover { background:var(--s3); transform:scale(1.05); }
+
+/* BANNER */
+.banner { background:var(--gn-l); border-bottom:0.5px solid rgba(40,167,69,.2); padding:9px 40px; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--gn-d); }
+body.dark .banner { color:var(--gn); }
+.bdot { width:7px; height:7px; border-radius:50%; background:var(--gn); flex-shrink:0; animation:pulse 2.4s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.banner b { font-weight:600; }
+
+/* NAV */
+.nav { background:var(--surface); border-bottom:0.5px solid var(--s3); padding:0 40px; display:flex; gap:0; overflow-x:auto; }
+.ntab { font-size:13px; font-weight:500; padding:13px 20px; cursor:pointer; color:var(--tx2); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; transition:color .15s,border-color .15s; white-space:nowrap; letter-spacing:-.01em; }
+.ntab:hover { color:var(--tx); }
+.ntab.active { color:var(--blue); border-bottom-color:var(--blue); }
+
+/* LAYOUT */
+.main { max-width:1120px; margin:0 auto; padding:36px 40px 80px; }
+.sec { display:none; }
+.sec.active { display:block; animation:fi .2s ease; }
+@keyframes fi { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+/* SECTION HEADING */
+.sh { margin-bottom:28px; }
+.sey { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--blue); margin-bottom:4px; }
+.st { font-size:32px; font-weight:700; letter-spacing:-.03em; line-height:1.1; }
+.ss { font-size:15px; color:var(--tx2); margin-top:6px; }
+
+/* CARDS */
+.card { background:var(--surface); border-radius:18px; padding:26px; box-shadow:var(--sh0); }
+.csm { background:var(--s2); border-radius:12px; padding:18px 20px; }
+
+/* KPI */
+.kpi { background:var(--surface); border-radius:16px; padding:22px; box-shadow:var(--sh0); }
+.klbl { font-size:12px; color:var(--tx2); font-weight:500; margin-bottom:7px; letter-spacing:.01em; }
+.kval { font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--tx); }
+.ksub { font-size:12px; color:var(--tx3); margin-top:5px; }
+.kup { color:var(--gn-d); font-size:12px; font-weight:600; margin-top:5px; }
+.kdn { color:var(--rd); font-size:12px; font-weight:600; margin-top:5px; }
+body.dark .kup { color:var(--gn); }
+
+/* TIMELINE */
+.tl { position:relative; padding-left:22px; }
+.tl::before { content:''; position:absolute; left:6px; top:8px; bottom:8px; width:1.5px; background:var(--s3); }
+.tli { position:relative; margin-bottom:22px; }
+.tli:last-child { margin-bottom:0; }
+.tldot { position:absolute; left:-22px; top:5px; width:13px; height:13px; border-radius:50%; background:var(--s2); border:2px solid var(--s4); z-index:1; }
+.tldot.key { border-color:var(--blue); background:var(--blue-l); }
+.tldot.done { border-color:var(--gn); background:var(--gn-l); }
+.tly { font-size:11px; font-weight:700; color:var(--blue); letter-spacing:.04em; text-transform:uppercase; margin-bottom:1px; }
+.tlt { font-size:14px; font-weight:600; margin-bottom:2px; }
+.tld { font-size:13px; color:var(--tx2); line-height:1.55; }
+
+/* LEADERSHIP */
+.lcard { background:var(--surface); border-radius:16px; padding:20px; display:flex; gap:14px; box-shadow:var(--sh0); transition:box-shadow .2s,transform .2s; }
+.lcard:hover { box-shadow:var(--sh1); transform:translateY(-2px); }
+.lcard.dim { opacity:.6; }
+.av { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+.av-bl { background:var(--blue-l); color:var(--blue); }
+.av-gn { background:var(--gn-l); color:var(--gn-d); }
+body.dark .av-gn { color:var(--gn); }
+.av-gr { background:var(--s2); color:var(--tx2); }
+.av-am { background:var(--am-l); color:var(--am); }
+.ln { font-size:15px; font-weight:600; }
+.lr { font-size:11px; color:var(--blue); font-weight:600; margin:2px 0 7px; }
+.lb { font-size:13px; color:var(--tx2); line-height:1.55; }
+.tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.tag { font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; background:var(--s2); color:var(--tx2); }
+.dep { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; background:var(--am-l); color:var(--am); margin-left:7px; }
+
+/* ALERTS */
+.alert { border-radius:12px; padding:13px 16px; font-size:13px; line-height:1.6; display:flex; gap:10px; }
+.aico { flex-shrink:0; font-size:16px; line-height:1.3; }
+.alert b { font-weight:600; }
+.aw { background:var(--am-l); color:var(--am); }
+.ag { background:var(--gn-l); color:var(--gn-d); }
+body.dark .ag { color:var(--gn); }
+.ai { background:var(--blue-l); color:var(--blue); }
+.ar { background:var(--rd-l); color:var(--rd); }
+.ap { background:var(--pu-l); color:var(--pu); }
+
+/* PILLS */
+.pill-new { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--blue-l); color:var(--blue); margin-left:6px; vertical-align:middle; }
+.pill-done { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--gn-l); color:var(--gn-d); margin-left:6px; vertical-align:middle; }
+body.dark .pill-done { color:var(--gn); }
+.pill-hot { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--blue); color:#fff; margin-left:6px; vertical-align:middle; }
+
+/* ═══ SEGMENT DUAL-BAR (signature) ═══ */
+.seg-wrap { background:var(--surface); border-radius:22px; padding:28px; box-shadow:var(--sh0); }
+.seg-hdr { display:flex; align-items:center; margin-bottom:8px; }
+.seg-tit { font-size:19px; font-weight:700; letter-spacing:-.02em; }
+.seg-tgl { display:flex; gap:0; margin-left:auto; background:var(--s2); border-radius:9px; padding:3px; }
+.seg-tbtn { font-size:11px; font-weight:600; padding:5px 13px; border-radius:7px; border:none; cursor:pointer; background:transparent; color:var(--tx2); transition:all .15s; }
+.seg-tbtn.on { background:var(--surface); color:var(--tx); box-shadow:var(--sh0); }
+body.dark .seg-tbtn.on { background:var(--s3); }
+.seg-sub { font-size:13px; color:var(--tx2); margin-bottom:22px; }
+.seg-leg { display:flex; gap:22px; margin-bottom:18px; font-size:12px; color:var(--tx2); }
+.seg-leg span { display:flex; align-items:center; gap:7px; }
+.leg-s { width:22px; height:5px; border-radius:3px; }
+.leg-str { width:22px; height:5px; border-radius:3px; }
+.seg-rows { display:flex; flex-direction:column; gap:0; }
+.seg-row { display:grid; grid-template-columns:148px 1fr; gap:12px; align-items:center; padding:14px 0; border-bottom:0.5px solid var(--s2); }
+.seg-row:last-child { border-bottom:none; }
+.seg-nm { font-size:13px; font-weight:700; color:var(--tx); }
+.seg-nt { font-size:11px; color:var(--tx3); margin-top:2px; }
+.seg-bars { display:flex; flex-direction:column; gap:6px; }
+.bar-r { display:flex; align-items:center; gap:10px; }
+.bar-lbl { font-size:10px; color:var(--tx3); width:68px; flex-shrink:0; text-align:right; font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
+.bar-trk { flex:1; height:11px; background:var(--s2); border-radius:6px; overflow:hidden; }
+.bar-fill { height:11px; border-radius:6px; transition:width .9s cubic-bezier(.16,1,.3,1); width:0; }
+.bar-fill.stripe { background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.28) 0,rgba(255,255,255,.28) 3px,transparent 3px,transparent 7px); }
+.bar-pct { font-size:12px; font-weight:700; width:36px; flex-shrink:0; color:var(--tx); font-variant-numeric:tabular-nums; }
+.seg-insight { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.si { background:var(--s2); border-radius:12px; padding:14px 16px; font-size:13px; color:var(--tx2); line-height:1.6; }
+.si b { color:var(--tx); font-weight:600; }
+
+/* COMP TABLE */
+.comp-wrap { background:var(--surface); border-radius:18px; overflow:hidden; box-shadow:var(--sh0); }
+.comp-table { width:100%; border-collapse:collapse; font-size:13px; }
+.comp-table th { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--tx3); padding:11px 16px; border-bottom:0.5px solid var(--s3); text-align:left; background:var(--s2); }
+.comp-table td { padding:13px 16px; border-bottom:0.5px solid var(--s3); color:var(--tx2); vertical-align:top; line-height:1.45; }
+.comp-table td:first-child { font-weight:600; color:var(--tx); }
+.comp-table tr:last-child td { border-bottom:none; }
+.comp-table tr.spgi-row td { background:var(--blue-l); }
+.comp-table tr.spgi-row td:first-child { color:var(--blue); }
+.comp-table tr:not(.spgi-row):hover td { background:var(--s2); }
+.mbadge { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.mbw { background:var(--gn-l); color:var(--gn-d); }
+body.dark .mbw { color:var(--gn); }
+.mbm { background:var(--am-l); color:var(--am); }
+
+/* FINANCIALS */
+.mgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.mc { background:var(--surface); border-radius:14px; padding:16px 18px; box-shadow:var(--sh0); }
+.mc-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+.mc-n { font-size:11px; font-weight:600; color:var(--tx2); }
+.mc-b { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; }
+.bp { background:var(--gn-l); color:var(--gn-d); }
+body.dark .bp { color:var(--gn); }
+.bna { background:var(--s2); color:var(--tx3); }
+.mc-ch { position:relative; height:110px; min-height:110px; }
+.mc-ft { font-size:10px; color:var(--tx3); margin-top:6px; font-variant-numeric:tabular-nums; }
+.score-row { background:var(--surface); border-radius:14px; padding:18px 22px; display:flex; align-items:center; gap:14px; margin-top:14px; box-shadow:var(--sh0); }
+.sdots { display:flex; gap:7px; }
+.sdot { width:12px; height:12px; border-radius:50%; }
+.slbl { font-size:13px; color:var(--tx2); margin-left:auto; }
+.sval { font-size:17px; font-weight:700; color:var(--gn-d); }
+body.dark .sval { color:var(--gn); }
+.note-box { background:var(--s2); border-radius:12px; padding:14px 16px; font-size:13px; color:var(--tx2); line-height:1.6; }
+.note-box b { color:var(--tx); font-weight:600; }
+
+/* VALUATION */
+.v4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.vc { background:var(--surface); border-radius:16px; padding:22px; box-shadow:var(--sh0); }
+.vc-l { font-size:12px; color:var(--tx2); font-weight:500; margin-bottom:6px; }
+.vc-n { font-size:26px; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.vc-c { font-size:11px; color:var(--tx3); margin-top:4px; }
+.hcard { background:var(--surface); border-radius:18px; padding:24px; box-shadow:var(--sh0); margin-bottom:16px; }
+.hcard-t { font-size:15px; font-weight:600; margin-bottom:16px; letter-spacing:-.01em; }
+.hchart { position:relative; height:170px; }
+.hlg { display:flex; gap:18px; margin-top:11px; font-size:12px; color:var(--tx2); }
+.hlg span { display:flex; align-items:center; gap:6px; }
+.hll { width:16px; height:2px; border-radius:1px; display:inline-block; }
+.hld { width:16px; height:0; border-top:2px dashed var(--tx3); display:inline-block; }
+.scns { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:24px; }
+.scn { border-radius:16px; padding:22px; }
+.scn-bear { background:var(--rd-l); }
+.scn-base { background:var(--blue-l); }
+.scn-bull { background:var(--gn-l); }
+.scn-lbl { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px; }
+.scn-bear .scn-lbl { color:var(--rd); }
+body.dark .scn-bear .scn-lbl { color:var(--rd-r); }
+.scn-base .scn-lbl { color:var(--blue); }
+.scn-bull .scn-lbl { color:var(--gn-d); }
+body.dark .scn-bull .scn-lbl { color:var(--gn); }
+.scn-ret { font-size:24px; font-weight:700; letter-spacing:-.02em; margin-bottom:8px; }
+.scn-bear .scn-ret { color:var(--rd); }
+body.dark .scn-bear .scn-ret { color:var(--rd-r); }
+.scn-base .scn-ret { color:var(--blue); }
+.scn-bull .scn-ret { color:var(--gn-d); }
+body.dark .scn-bull .scn-ret { color:var(--gn); }
+.scn-d { font-size:12px; line-height:1.6; color:var(--tx2); }
+.mb-card { background:var(--surface); border-radius:16px; padding:22px; box-shadow:var(--sh0); margin-bottom:16px; }
+.mb-r { display:flex; align-items:flex-start; gap:13px; padding:11px 0; border-bottom:0.5px solid var(--s3); }
+.mb-r:last-child { border-bottom:none; }
+.mb-ico { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.mb-pass { background:var(--gn-l); }
+.mb-fail { background:var(--rd-l); }
+.mb-may { background:var(--am-l); }
+.mb-t { font-size:13px; color:var(--tx2); line-height:1.6; padding-top:2px; }
+.mb-t b { color:var(--tx); font-weight:600; }
+.verd { background:var(--am-l); border-radius:22px; padding:26px 28px; display:flex; gap:16px; margin-bottom:24px; }
+.verd-ico { font-size:32px; flex-shrink:0; }
+.verd-t { font-size:18px; font-weight:700; color:var(--am); margin-bottom:8px; letter-spacing:-.01em; }
+.verd-d { font-size:13px; color:var(--am); line-height:1.65; opacity:.9; }
+.verd-d b { font-weight:700; opacity:1; }
+.risk-wrap { background:var(--surface); border-radius:18px; overflow:hidden; box-shadow:var(--sh0); }
+.rr { display:flex; gap:12px; padding:14px 20px; border-bottom:0.5px solid var(--s3); align-items:flex-start; transition:background .15s; }
+.rr:last-child { border-bottom:none; }
+.rr:hover { background:var(--s2); }
+.rsev { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; flex-shrink:0; margin-top:1px; letter-spacing:.03em; }
+.rh { background:var(--rd-l); color:var(--rd); }
+.rm { background:var(--am-l); color:var(--am); }
+.rl { background:var(--s2); color:var(--tx3); }
+.rtext { font-size:13px; color:var(--tx2); line-height:1.5; }
+.rtext strong { color:var(--tx); font-weight:600; display:block; margin-bottom:1px; }
+
+/* NEWS */
+.news-hero { background:linear-gradient(135deg,var(--blue) 0%,#5b3fff 100%); border-radius:22px; padding:32px 36px; color:#fff; margin-bottom:24px; position:relative; overflow:hidden; }
+.news-hero::after { content:''; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:rgba(255,255,255,.07); pointer-events:none; }
+.nh-eyebrow { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.7; margin-bottom:8px; }
+.nh-date { font-size:12px; opacity:.65; margin-bottom:14px; }
+.nh-title { font-size:22px; font-weight:700; letter-spacing:-.02em; line-height:1.25; margin-bottom:10px; }
+.nh-body { font-size:14px; line-height:1.65; opacity:.88; }
+.nh-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-top:24px; border-top:1px solid rgba(255,255,255,.2); padding-top:20px; }
+.nh-kpi { padding:0 20px 0 0; border-right:1px solid rgba(255,255,255,.2); }
+.nh-kpi:last-child { border-right:none; padding-right:0; padding-left:20px; }
+.nh-kpi:first-child { padding-left:0; }
+.nh-kv { font-size:26px; font-weight:700; letter-spacing:-.03em; }
+.nh-kl { font-size:11px; opacity:.65; margin-top:2px; }
+.nh-kd { font-size:12px; font-weight:700; opacity:.85; margin-top:3px; }
+.nh-kd.up::before { content:'↑ '; }
+.nh-kd.lt::before { content:'→ '; }
+
+/* NEWS ITEM CARD */
+.news-item { background:var(--surface); border-radius:18px; padding:22px 24px; box-shadow:var(--sh0); display:flex; gap:18px; align-items:flex-start; transition:box-shadow .2s,transform .2s; }
+.news-item:hover { box-shadow:var(--sh1); transform:translateY(-2px); }
+.ni-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.ni-date { font-size:11px; font-weight:600; color:var(--tx3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+.ni-title { font-size:14px; font-weight:700; color:var(--tx); margin-bottom:5px; letter-spacing:-.01em; line-height:1.3; }
+.ni-body { font-size:13px; color:var(--tx2); line-height:1.55; }
+.ni-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; margin-top:8px; }
+
+/* EARNINGS CALL */
+.ec-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.ec-card { background:var(--surface); border-radius:16px; padding:22px; box-shadow:var(--sh0); }
+.ec-cat { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--tx3); margin-bottom:10px; }
+.ec-qs { display:flex; flex-direction:column; gap:12px; }
+.ec-q { border-left:3px solid var(--blue); padding-left:14px; }
+.ec-ql { font-size:11px; font-weight:600; color:var(--blue); margin-bottom:3px; }
+.ec-qt { font-size:13px; color:var(--tx2); line-height:1.55; font-style:italic; }
+.ec-qa { font-size:13px; color:var(--tx); line-height:1.55; margin-top:5px; }
+.metric-row { display:flex; align-items:baseline; justify-content:space-between; padding:9px 0; border-bottom:0.5px solid var(--s3); }
+.metric-row:last-child { border-bottom:none; }
+.mr-lbl { font-size:13px; color:var(--tx2); }
+.mr-val { font-size:14px; font-weight:700; color:var(--tx); font-variant-numeric:tabular-nums; }
+.mr-del { font-size:12px; font-weight:600; margin-left:8px; }
+.mr-up { color:var(--gn-d); }
+.mr-dn { color:var(--rd); }
+body.dark .mr-up { color:var(--gn); }
+body.dark .mr-dn { color:var(--rd-r); }
+
+/* ANALYST STRIP */
+.analyst-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.an-card { background:var(--surface); border-radius:16px; padding:20px 22px; box-shadow:var(--sh0); }
+.an-firm { font-size:11px; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+.an-rating { font-size:17px; font-weight:700; color:var(--tx); margin-bottom:3px; }
+.an-target { font-size:13px; color:var(--tx2); }
+.an-delta { font-size:12px; font-weight:600; margin-top:4px; color:var(--gn-d); }
+body.dark .an-delta { color:var(--gn); }
+
+/* INVESTOR CALLOUT */
+.inv-card { background:var(--pu-l); border-radius:18px; padding:24px 26px; display:flex; gap:16px; align-items:flex-start; margin-bottom:16px; }
+.inv-ico { font-size:28px; flex-shrink:0; }
+.inv-t { font-size:16px; font-weight:700; color:var(--pu); margin-bottom:6px; }
+.inv-b { font-size:13px; color:var(--pu); line-height:1.65; opacity:.9; }
+.inv-b b { font-weight:700; opacity:1; }
+
+.hdiv { border:none; border-top:0.5px solid var(--s3); margin:24px 0; }
+@media(max-width:768px){.main{padding:18px 16px 60px}.g2,.g3,.g4,.mgrid,.v4,.scns,.ec-grid,.analyst-strip{grid-template-columns:1fr}.hdr-pills{display:none}.nh-kpis{grid-template-columns:1fr 1fr}}
+
+/* ── SEGMENT DEEP-DIVE (collapsible) ── */
+.seg-deep { margin-bottom: 10px; background: var(--surface); border-radius: 16px; overflow: hidden; box-shadow: var(--sh0); }
+.seg-deep-hdr {
+  display: flex; align-items: center; gap: 14px; padding: 18px 22px;
+  cursor: pointer; user-select: none; transition: background .15s;
+  list-style: none;
+}
+.seg-deep-hdr:hover { background: var(--s2); }
+.seg-deep-hdr::-webkit-details-marker { display: none; }
+.seg-deep[open] .seg-deep-hdr { border-bottom: 0.5px solid var(--s3); }
+.sdh-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.sdh-name { font-size: 15px; font-weight: 700; letter-spacing: -.01em; flex: 1; }
+.sdh-meta { font-size: 12px; color: var(--tx2); display: flex; gap: 16px; }
+.sdh-meta span { display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.sdh-meta .pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.sdh-chevron { font-size: 13px; color: var(--tx3); transition: transform .25s; flex-shrink: 0; }
+.seg-deep[open] .sdh-chevron { transform: rotate(180deg); }
+.seg-deep-body { padding: 22px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; animation: fi .2s ease; }
+.sdb-col { display: flex; flex-direction: column; gap: 12px; }
+.sdb-section { }
+.sdb-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tx3); margin-bottom: 8px; }
+.sdb-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 0.5px solid var(--s2); font-size: 13px; }
+.sdb-row:last-child { border-bottom: none; }
+.sdb-row-label { color: var(--tx2); }
+.sdb-row-val { font-weight: 600; color: var(--tx); font-variant-numeric: tabular-nums; }
+.sdb-row-val.up { color: var(--gn-d); }
+body.dark .sdb-row-val.up { color: var(--gn); }
+.sdb-bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.sdb-bullets li { font-size: 13px; color: var(--tx2); line-height: 1.5; display: flex; gap: 8px; }
+.sdb-bullets li::before { content: '–'; color: var(--tx3); flex-shrink: 0; font-weight: 500; }
+.sdb-insight { background: var(--s2); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--tx2); line-height: 1.6; }
+.sdb-insight b { color: var(--tx); font-weight: 600; }
+.sdb-moat { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 4px; }
+/* revenue-mix mini bars inside deep-dive */
+.mini-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.mini-bar-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.mini-bar-label { color: var(--tx2); width: 130px; flex-shrink: 0; }
+.mini-bar-track { flex: 1; height: 8px; background: var(--s2); border-radius: 4px; overflow: hidden; }
+.mini-bar-fill { height: 8px; border-radius: 4px; }
+.mini-bar-pct { width: 34px; text-align: right; font-weight: 600; color: var(--tx); font-size: 11px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+/* MOAT VISUAL */
+.moat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.moat-card { background: var(--surface); border-radius: 14px; padding: 18px 20px; box-shadow: var(--sh0); }
+.moat-card-seg { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--tx3); margin-bottom: 5px; }
+.moat-card-rating { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.moat-card-desc { font-size: 12px; color: var(--tx2); line-height: 1.5; }
+.moat-stars { display: flex; gap: 3px; margin-bottom: 6px; }
+.moat-star { width: 9px; height: 9px; border-radius: 50%; }
+
+/* USP HERO */
+.usp-card { background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%); border-radius: 20px; padding: 28px 30px; color: #f5f5f7; margin-bottom: 24px; }
+body.light .usp-card { background: linear-gradient(135deg, #1d1d1f 0%, #3a3a3c 100%); }
+.usp-headline { font-size: 22px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px; line-height: 1.2; }
+.usp-sub { font-size: 14px; opacity: .75; line-height: 1.65; margin-bottom: 20px; }
+.usp-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.usp-pill { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,.1); color: #f5f5f7; }
+
+/* ── REVENUE VIEWS ── */
+.rev-section { background:var(--surface); border-radius:22px; padding:28px; box-shadow:var(--sh0); margin-bottom:20px; }
+.rev-section-title { font-size:19px; font-weight:700; letter-spacing:-.02em; margin-bottom:4px; }
+.rev-section-sub { font-size:13px; color:var(--tx2); margin-bottom:22px; }
+.rev-tabs { display:flex; gap:0; background:var(--s2); border-radius:9px; padding:3px; width:fit-content; margin-bottom:22px; }
+.rev-tab { font-size:11px; font-weight:600; padding:5px 14px; border-radius:7px; border:none; cursor:pointer; background:transparent; color:var(--tx2); transition:all .15s; }
+.rev-tab.on { background:var(--surface); color:var(--tx); box-shadow:var(--sh0); }
+body.dark .rev-tab.on { background:var(--s3); }
+
+/* Donut chart container */
+.donut-wrap { display:grid; grid-template-columns:200px 1fr; gap:32px; align-items:center; }
+.donut-canvas { position:relative; width:200px; height:200px; flex-shrink:0; }
+.donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+.donut-center-val { font-size:22px; font-weight:700; letter-spacing:-.02em; line-height:1; }
+.donut-center-lbl { font-size:10px; color:var(--tx2); margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.04em; }
+.donut-legend { display:flex; flex-direction:column; gap:0; }
+.donut-leg-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:0.5px solid var(--s2); cursor:pointer; border-radius:6px; padding-left:4px; transition:background .12s; }
+.donut-leg-row:last-child { border-bottom:none; }
+.donut-leg-row:hover { background:var(--s2); }
+.donut-leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.donut-leg-label { font-size:13px; color:var(--tx); font-weight:500; flex:1; }
+.donut-leg-pct { font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; width:36px; text-align:right; flex-shrink:0; }
+.donut-leg-val { font-size:11px; color:var(--tx3); width:54px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
+.donut-leg-bar-wrap { width:80px; height:5px; background:var(--s2); border-radius:3px; overflow:hidden; flex-shrink:0; }
+.donut-leg-bar { height:5px; border-radius:3px; }
+/* Trend badges in legend */
+.trend { font-size:10px; font-weight:600; padding:1px 6px; border-radius:20px; flex-shrink:0; }
+.trend-up { background:var(--gn-l); color:var(--gn-d); }
+body.dark .trend-up { color:var(--gn); }
+.trend-dn { background:var(--rd-l); color:var(--rd); }
+.trend-flat { background:var(--s2); color:var(--tx3); }
+
+/* Geography map-style bar chart */
+.geo-grid { display:flex; flex-direction:column; gap:14px; }
+.geo-row { display:flex; flex-direction:column; gap:5px; }
+.geo-header { display:flex; justify-content:space-between; align-items:baseline; }
+.geo-name { font-size:13px; font-weight:600; }
+.geo-vals { display:flex; gap:10px; align-items:baseline; }
+.geo-pct { font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; }
+.geo-abs { font-size:12px; color:var(--tx2); font-variant-numeric:tabular-nums; }
+.geo-trend { font-size:11px; font-weight:600; }
+.geo-track { height:10px; background:var(--s2); border-radius:5px; overflow:hidden; position:relative; }
+.geo-fill { height:10px; border-radius:5px; transition:width .9s cubic-bezier(.16,1,.3,1); width:0; }
+.geo-yoy { font-size:11px; color:var(--tx3); margin-top:2px; }
+
+/* 3-year trend sparkline row */
+.trend-row { display:flex; align-items:center; gap:6px; margin-top:3px; font-size:11px; color:var(--tx3); font-variant-numeric:tabular-nums; }
+.trend-yr { }
+.trend-arr { color:var(--tx3); }
+
+/* ── PEER COMPARISON ── */
+.peer-section { margin-bottom: 24px; }
+.peer-eyebrow { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx3); margin-bottom:10px; }
+
+/* Header row */
+.peer-table-wrap { background:var(--surface); border-radius:18px; overflow:hidden; box-shadow:var(--sh0); }
+.peer-table { width:100%; border-collapse:collapse; }
+.peer-table th { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--tx3); padding:12px 18px; border-bottom:0.5px solid var(--s3); text-align:left; background:var(--s2); }
+.peer-table th:not(:first-child) { text-align:right; }
+.peer-table td { padding:0; border-bottom:0.5px solid var(--s3); vertical-align:middle; }
+.peer-table tr:last-child td { border-bottom:none; }
+.peer-table tr:hover td .peer-row-inner { background:var(--s2); }
+.peer-row-inner { display:flex; flex-direction:column; padding:14px 18px; }
+.peer-cell { padding:14px 18px; vertical-align:middle; }
+.peer-cell:not(:first-child) { text-align:right; }
+
+/* Company name cell */
+.peer-co { display:flex; align-items:center; gap:11px; }
+.peer-logo { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.peer-co-name { font-size:14px; font-weight:700; }
+.peer-co-ticker { font-size:11px; color:var(--tx3); margin-top:1px; }
+
+/* Metric cells */
+.peer-metric { font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.peer-metric-sub { font-size:11px; color:var(--tx3); margin-top:2px; font-variant-numeric:tabular-nums; }
+
+/* Winner highlight */
+.peer-win { color:var(--gn-d); }
+body.dark .peer-win { color:var(--gn); }
+.peer-mid { color:var(--tx); }
+.peer-high { color:var(--rd); }
+.peer-badge { display:inline-block; font-size:9px; font-weight:700; padding:2px 6px; border-radius:20px; margin-left:5px; vertical-align:middle; }
+.pb-cheap { background:var(--gn-l); color:var(--gn-d); }
+body.dark .pb-cheap { color:var(--gn); }
+.pb-fair { background:var(--am-l); color:var(--am); }
+.pb-rich { background:var(--rd-l); color:var(--rd); }
+
+/* Highlight bar behind SPGI row */
+.peer-table tr.spgi-row td { background:var(--blue-l); }
+
+/* Radar / spider chart */
+.radar-wrap { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:center; background:var(--surface); border-radius:18px; padding:24px; box-shadow:var(--sh0); margin-top:14px; }
+.radar-canvas { position:relative; width:220px; height:220px; flex-shrink:0; }
+.radar-legend { display:flex; flex-direction:column; gap:10px; }
+.radar-leg-row { display:flex; align-items:center; gap:10px; font-size:13px; }
+.radar-leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.radar-leg-label { font-weight:600; width:50px; }
+.radar-leg-desc { font-size:12px; color:var(--tx2); line-height:1.5; }
+
+/* ICE footnote */
+.ice-note { background:var(--s2); border-radius:12px; padding:13px 16px; font-size:12px; color:var(--tx2); line-height:1.6; margin-top:12px; }
+.ice-note b { color:var(--tx); font-weight:600; }
+
+/* Relative valuation bar chart */
+.rel-bars { display:flex; flex-direction:column; gap:14px; margin-top:4px; }
+.rel-bar-row { display:flex; flex-direction:column; gap:4px; }
+.rel-bar-header { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; }
+.rel-bar-metric { font-weight:600; color:var(--tx); }
+.rel-bar-vals { display:flex; gap:8px; font-variant-numeric:tabular-nums; }
+.rel-bar-track { height:8px; background:var(--s2); border-radius:4px; position:relative; overflow:visible; }
+.rel-bar-seg { height:8px; border-radius:4px; position:absolute; top:0; transition:width .9s cubic-bezier(.16,1,.3,1); }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <span class="hdr-ticker">SPGI</span>
+  <span class="hdr-name">S&P Global Inc.</span>
+  <div class="hdr-pills">
+    <span><b>~$404</b> NYSE</span>
+    <span><b>~$119B</b> mkt cap</span>
+    <span><b>Q2 2026</b> latest results</span>
+    <span>Div yield <b>0.94%</b></span>
+    <span>Sep 28, 2026</span>
+  </div>
+  <div class="hdr-r">
+    <span class="vchip">🟡 Fair / Priced for Execution</span>
+    <button class="tbtn" onclick="toggleTheme()" id="tbtn" aria-label="Toggle theme">☀</button>
+  </div>
+</header>
+
+<div class="banner">
+  <span class="bdot"></span>
+  <span>Mobility Global (NYSE: MBGL) spun off July 1, 2026 · Q2 results: revenue +11%, adj. EPS +23%, margin 54.3% · OpenZeppelin acquisition announced Sep 17 · Kaiko Series B led by SPGI Sep 14 · Next earnings <b>Oct 22, 2026 BMO</b></span>
+</div>
+
+<nav class="nav">
+  <button class="ntab active" onclick="sw('co')">Company Overview</button>
+  <button class="ntab" onclick="sw('fin')">Financials</button>
+  <button class="ntab" onclick="sw('val')">Valuation</button>
+  <button class="ntab" onclick="sw('news')">Latest News</button>
+</nav>
+
+<main class="main">
+
+<!-- ══════════════ COMPANY OVERVIEW ══════════════ -->
+<section id="co" class="sec active">
+  <div class="g4" style="margin-bottom:20px">
+    <div class="kpi"><div class="klbl">Founded</div><div class="kval">1860</div><div class="ksub">165 years of financial intelligence</div></div>
+    <div class="kpi"><div class="klbl">Post-spin segments</div><div class="kval">4</div><div class="ksub">Ratings · MI · Indices · Energy</div></div>
+    <div class="kpi"><div class="klbl">FY25 Revenue</div><div class="kval">$15.3B</div><div class="kup">↑ 8% YoY</div></div>
+    <div class="kpi"><div class="klbl">Q2 2026 Adj. Op. Margin</div><div class="kval">54.3%</div><div class="kup">↑ 200bps · post-spin record</div></div>
+  </div>
+
+  <div class="g2" style="margin-bottom:20px">
+    <div class="card" style="padding:28px">
+      <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:22px">History</div>
+      <div class="tl">
+        <div class="tli"><div class="tldot key"></div><div class="tly">1860</div><div class="tlt">Henry Varnum Poor publishes railroad data</div><div class="tld">History of Railroads and Canals establishes standardised financial information. The company still operates from the same Water Street address.</div></div>
+        <div class="tli"><div class="tldot key"></div><div class="tly">1941</div><div class="tlt">Standard & Poor's formed</div><div class="tld">Merger of Poor's Publishing and Standard Statistics creates a unified financial data house.</div></div>
+        <div class="tli"><div class="tldot key"></div><div class="tly">1957</div><div class="tlt">S&P 500 Index launches</div><div class="tld">The world's most tracked equity benchmark. Foundation of SPGI's highest-margin Indices segment. In Q2 2026, the S&P 500 ETF became the first to breach $1 trillion in AUM.</div></div>
+        <div class="tli"><div class="tldot"></div><div class="tly">2016</div><div class="tlt">Rebrands as S&P Global · Acquires SNL Financial</div><div class="tld">Strategic pivot to pure-play financial data. SNL Financial acquired ~$2.2B to build Market Intelligence.</div></div>
+        <div class="tli"><div class="tldot"></div><div class="tly">2018</div><div class="tlt">Acquires Kensho Technologies</div><div class="tld">AI/ML backbone. Kensho LLM-ready API call volume quintupled QoQ in Q2 2026; 500+ clients, up 70%.</div></div>
+        <div class="tli"><div class="tldot key"></div><div class="tly">Feb 2022</div><div class="tlt">$44B IHS Markit merger completed</div><div class="tld">All-stock deal adds Commodity Insights, Carfax, maritime and engineering data. Distorts ROE and equity ratios for several years due to share issuance mechanics.</div></div>
+        <div class="tli"><div class="tldot"></div><div class="tly">Nov 2024</div><div class="tlt">Martina Cheung becomes CEO</div><div class="tld">14-year veteran and former Ratings President succeeds Douglas Peterson. First female CEO.</div></div>
+        <div class="tli"><div class="tldot"></div><div class="tly">Feb 2026</div><div class="tlt">Guidance miss — stock de-rates 25%</div><div class="tld">Q4 2025 adj. EPS $4.30 vs $4.34 est. and FCF miss. 2026 guidance below Investor Day targets. Stock falls from $579 ATH toward $403.</div></div>
+        <div class="tli"><div class="tldot"></div><div class="tly">May 26, 2026</div><div class="tlt">Saha departs · EDO reorganised <span class="pill-new">NEW</span></div><div class="tld">President of MI and Chief Enterprise Data Officer exits July 30. Enterprise Data Organisation folded into CTO Firdaus Bhathena's office. No MI successor named.</div></div>
+        <div class="tli"><div class="tldot done"></div><div class="tly">Jul 1, 2026</div><div class="tlt">Mobility Global spin-off complete <span class="pill-done">DONE</span></div><div class="tld">Mobility Global (NYSE: MBGL) begins trading independently. 1-for-1 share distribution at June 15 record date.</div></div>
+        <div class="tli"><div class="tldot done"></div><div class="tly">Jul 28, 2026</div><div class="tlt">Q2 2026: first earnings as pure-play <span class="pill-hot">LATEST</span></div><div class="tld">Revenue +11%, adj. EPS +23% to $4.83, margin +200bps to 54.3%. Ratings record (+17%). Indices 13th consecutive record quarter (+20%). $7B buyback announced. datacenterHawk acquisition signed.</div></div>
+        <div class="tli"><div class="tldot done"></div><div class="tly">Aug 12, 2026</div><div class="tlt">Microsoft 365 Copilot integration announced <span class="pill-hot">LATEST</span></div><div class="tld">S&P Global data, insights and analytics integrated into Microsoft 365 Copilot via Kensho LLM-ready API. Direct counter to AI disruption bear thesis.</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;padding:0 2px">Leadership</div>
+      <div class="lcard"><div class="av av-bl">MC</div><div><div class="ln">Martina L. Cheung</div><div class="lr">President & CEO · Board member · Since Nov 2024</div><div class="lb">14-year SPGI veteran. Led due diligence on the $44B IHS Markit merger. Previously President of Ratings ($3.3B rev, 56.5% op margin) and Market Intelligence. BCom + MBS, NUI Galway. Led first post-spin earnings call July 28, 2026, framing Ratings and Indices record results as validation of the simplified 4-segment strategy.</div><div class="tags"><span class="tag">IHS Markit architect</span><span class="tag">First female CEO</span><span class="tag">AI strategy</span></div></div></div>
+      <div class="lcard"><div class="av av-gn">YL</div><div><div class="ln">Yann Le Pallec</div><div class="lr">President, S&P Global Ratings · Since Nov 2024</div><div class="lb">Leads SPGI's most profitable segment. Q2 2026: Ratings revenue +17%, transaction revenue +25%, IG issuance up high-20s%. Oversees the segment's 13th consecutive record quarter in Indices cross-reporting.</div><div class="tags"><span class="tag">Record Q2 2026</span><span class="tag">Credit markets expert</span></div></div></div>
+      <div class="lcard"><div class="av av-bl" style="font-size:12px">FB</div><div><div class="ln">Firdaus Bhathena</div><div class="lr">Chief Technology & Transformation Officer · Expanded scope May 2026</div><div class="lb">Absorbed the Enterprise Data Organisation following Saha's departure. Now single point of authority for all AI product development. ~60% of $100M annualised EDO cost-save target achieved.</div><div class="tags"><span class="tag">AI execution lead</span><span class="tag">EDO absorbed</span><span class="tag">$100M cost-save</span></div></div></div>
+      <div class="lcard dim"><div class="av av-am">SS</div><div><div class="ln">Saugata Saha <span class="dep">Departed Jul 30</span></div><div class="lr">President, Market Intelligence & Chief Enterprise Data Officer</div><div class="lb">Departed July 30, 2026. No successor named. MI is SPGI's largest revenue segment (~34% pro forma). CEO Cheung stated the company will "move quickly and thoughtfully" on restructuring MI leadership.</div><div class="tags"><span class="tag">Successor TBD</span><span class="tag">Key risk: MI gap</span></div></div></div>
+      <div class="alert aw"><span class="aico">⚠</span><div><b>Elevated execution risk:</b> Three concurrent leadership transitions (CEO Nov 2024, Ratings President Nov 2024, MI President departed Jul 2026) alongside the spin-off and EDO reorganisation. MI President role still open as of Sep 28, 2026. Announcement expected on or before Oct 22 Q3 earnings call.</div></div>
+    </div>
+  </div>
+
+  <!-- SEGMENT DUAL-BAR -->
+  <div class="seg-wrap" style="margin-bottom:20px">
+    <div class="seg-hdr">
+      <div class="seg-tit">Segment breakdown — revenue vs. margin</div>
+      <div class="seg-tgl">
+        <button class="seg-tbtn on" onclick="setView('gaap',this)">GAAP</button>
+        <button class="seg-tbtn" onclick="setView('adj',this)">Adjusted</button>
+      </div>
+    </div>
+    <div class="seg-sub">FY2025 pro forma (ex-Mobility recast) · Source: S&P Global 8-K, July 6 2026</div>
+    <div class="seg-leg">
+      <span><span class="leg-s" id="leg-rev"></span>Revenue share of total</span>
+      <span><span class="leg-str" id="leg-mar" style="background:repeating-linear-gradient(45deg,var(--tx3) 0,var(--tx3) 2px,transparent 2px,transparent 5px)"></span>Operating margin</span>
+    </div>
+    <div class="seg-rows" id="segGrid"></div>
+    <div class="seg-insight">
+      <div class="si"><b>Indices: smallest revenue, highest margin.</b> At only 14% of revenue but 69–71% operating margin, Indices earns roughly $1 of operating profit for every $1.45 of revenue. AUM-based fees scale with zero incremental cost — every new dollar of passive inflows generates near-pure profit.</div>
+      <div class="si"><b>Market Intelligence: the margin drag, but the largest segment.</b> At 20% GAAP / 34% adjusted margin despite being 37% of revenue, MI carries heavy tech and data costs. The EDO reorganisation and Kensho AI programme are explicitly designed to close this gap — the single most important operating leverage story post-spin.</div>
+    </div>
+  </div>
+
+
+  <!-- REVENUE BY TYPE + GEOGRAPHY -->
+  <div class="rev-section">
+    <div class="rev-section-title">Revenue breakdown</div>
+    <div class="rev-section-sub">FY2025 · Source: S&P Global 10-K, Year ended December 31, 2025</div>
+
+    <!-- Toggle -->
+    <div class="rev-tabs">
+      <button class="rev-tab on" onclick="setRevView('type',this)">By revenue type</button>
+      <button class="rev-tab" onclick="setRevView('geo',this)">By geography</button>
+    </div>
+
+    <!-- VIEW 1: Revenue by type -->
+    <div id="rev-type">
+      <div class="donut-wrap">
+        <div style="position:relative;width:200px;height:200px;flex-shrink:0">
+          <canvas id="revTypeChart" width="200" height="200" role="img" aria-label="Donut chart showing revenue by type: subscriptions 51 percent, non-subscription transaction 21 percent, non-transaction 13 percent, asset linked 8 percent, recurring variable 4 percent, usage royalties 3 percent"></canvas>
+          <div class="donut-center">
+            <div class="donut-center-val">$15.3B</div>
+            <div class="donut-center-lbl">FY2025</div>
+          </div>
+        </div>
+        <div class="donut-legend" id="revTypeLegend">
+          <!-- injected by JS -->
+        </div>
+      </div>
+      <div style="margin-top:16px;background:var(--s2);border-radius:12px;padding:13px 16px;font-size:13px;color:var(--tx2);line-height:1.6">
+        <b style="color:var(--tx)">Key shift:</b> Subscription revenue share has declined from 55% (2023) to 51% (2025) as transaction revenue surged — driven by record Ratings issuance volumes. Non-subscription/transaction revenue grew from 17% to 21% of total over two years, reflecting the strength of the Ratings cycle. Asset-linked fees grew from 7% to 8% as passive AUM reached new highs.
+      </div>
+    </div>
+
+    <!-- VIEW 2: Revenue by geography -->
+    <div id="rev-geo" style="display:none">
+      <div class="geo-grid" id="revGeoGrid">
+        <!-- injected by JS -->
+      </div>
+      <div style="margin-top:20px;background:var(--s2);border-radius:12px;padding:13px 16px;font-size:13px;color:var(--tx2);line-height:1.6">
+        <b style="color:var(--tx)">Geographic mix is stable:</b> US at 61% and International at 39% has held steady for three consecutive years — a highly diversified but US-anchored revenue base. Europe ($3.53B, +8.5% YoY) and Asia ($1.64B, +10% YoY) are both growing faster than the US ($9.32B, +7.9% YoY), reflecting international expansion in Ratings and Market Intelligence. Rest of world is the smallest and most volatile component.
+      </div>
+    </div>
+  </div>
+
+  <!-- USP -->
+  <div class="usp-card">
+    <div class="usp-headline">The trusted standard for global financial intelligence</div>
+    <div class="usp-sub">S&P Global's core proposition is not data — it is trusted standards and proprietary intelligence embedded in the decisions, mandates and contracts that underpin global capital markets. Ratings are regulatory currency. Indices are investment mandates. Benchmarks are contracts. Switching away is not just inconvenient — for many customers, it is structurally impossible.</div>
+    <div class="usp-pills">
+      <span class="usp-pill">Credit ratings = market access</span>
+      <span class="usp-pill">S&P 500 = the investable standard</span>
+      <span class="usp-pill">Platts = commodity contracts</span>
+      <span class="usp-pill">Capital IQ = institutional workflow</span>
+    </div>
+  </div>
+
+  <!-- HOW EACH SEGMENT MAKES MONEY: collapsible deep-dives -->
+  <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">How each segment makes money</div>
+  <div style="font-size:14px;color:var(--tx2);margin-bottom:16px">Tap any segment to expand revenue mechanics, key customers, and competitive positioning.</div>
+
+  <!-- RATINGS -->
+  <details class="seg-deep">
+    <summary class="seg-deep-hdr">
+      <span class="sdh-dot" style="background:#0071e3"></span>
+      <span class="sdh-name">S&P Global Ratings</span>
+      <div class="sdh-meta">
+        <span>Revenue <b>$4.72B</b></span>
+        <span>Op. margin <b style="color:#28a745">64%</b></span>
+        <span><span class="pill" style="background:var(--gn-l);color:var(--gn-d)">Highest margin</span></span>
+      </div>
+      <span class="sdh-chevron">▾</span>
+    </summary>
+    <div class="seg-deep-body">
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Revenue mix — FY2025</div>
+          <div class="mini-bars">
+            <div class="mini-bar-row"><span class="mini-bar-label">Transaction (issuance fees)</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:52%;background:#0071e3"></div></div><span class="mini-bar-pct">52%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Non-transaction (surveillance)</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:48%;background:#7bb3fa"></div></div><span class="mini-bar-pct">48%</span></div>
+          </div>
+          <div class="sdb-insight" style="margin-top:10px"><b>Key insight:</b> Nearly half of Ratings revenue is <b>recurring surveillance fees</b> — not tied to new bond issuance. This cushions the segment in slow issuance environments.</div>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">FY2025 financials</div>
+          <div class="sdb-row"><span class="sdb-row-label">Revenue</span><span class="sdb-row-val">$4.72B</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Transaction revenue</span><span class="sdb-row-val">$2.47B (52%)</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Non-transaction revenue</span><span class="sdb-row-val">$2.25B (48%)</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Operating margin (GAAP)</span><span class="sdb-row-val up">64%</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Q2 2026 revenue growth</span><span class="sdb-row-val up">+17% YoY (record)</span></div>
+        </div>
+      </div>
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">What issuers are actually buying</div>
+          <ul class="sdb-bullets">
+            <li>Market acceptance — a credible rating widens the investor pool and satisfies investment-mandate requirements</li>
+            <li>Regulatory capital recognition — many bank and insurance mandates require rated instruments</li>
+            <li>Pricing and placement — rated bonds price tighter and place faster than unrated paper</li>
+            <li>Comparability — standardised opinions across companies, sectors and geographies</li>
+          </ul>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">Cyclicality — the main risk</div>
+          <ul class="sdb-bullets">
+            <li>Transaction revenue rises sharply when companies refinance, spreads tighten, or M&A accelerates</li>
+            <li>It weakens when issuance freezes during market stress or rising rates</li>
+            <li>Q2 2026 IG issuance was up high-20s% — near-peak cyclical conditions</li>
+          </ul>
+        </div>
+        <div class="sdb-moat" style="background:var(--blue-l);color:var(--blue)">
+          🏰 Moat: <b style="margin-left:4px">Very wide</b> — institutional trust moat + regulatory acceptance + decades of default history data impossible to replicate quickly
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- MARKET INTELLIGENCE -->
+  <details class="seg-deep">
+    <summary class="seg-deep-hdr">
+      <span class="sdh-dot" style="background:#7d3fd1"></span>
+      <span class="sdh-name">S&P Global Market Intelligence</span>
+      <div class="sdh-meta">
+        <span>Revenue <b>$4.92B</b></span>
+        <span>Op. margin <b style="color:var(--am)">20% GAAP · 34% adj.</b></span>
+        <span><span class="pill" style="background:var(--am-l);color:var(--am)">Largest segment</span></span>
+      </div>
+      <span class="sdh-chevron">▾</span>
+    </summary>
+    <div class="seg-deep-body">
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Revenue mix — FY2025</div>
+          <div class="mini-bars">
+            <div class="mini-bar-row"><span class="mini-bar-label">Subscriptions</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:83%;background:#7d3fd1"></div></div><span class="mini-bar-pct">83%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Recurring variable</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:13%;background:#bf5af2"></div></div><span class="mini-bar-pct">13%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Non-subscription</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:4%;background:#d8b4fe"></div></div><span class="mini-bar-pct">4%</span></div>
+          </div>
+          <div class="sdb-insight" style="margin-top:10px"><b>83% subscriptions</b> makes MI the most recurring segment by revenue mix. But its low 20% GAAP margin reflects heavy technology, data collection and integration costs — the key post-spin improvement target.</div>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">New structure post-Q2 2026 reorganisation</div>
+          <div class="sdb-row"><span class="sdb-row-label">Kensho Data & Platforms</span><span class="sdb-row-val">High-single to low-double-digit organic growth</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Enterprise Solutions</span><span class="sdb-row-val">Low-single-digit organic growth</span></div>
+          <div class="sdb-row" style="font-size:12px;color:var(--tx2)"><span>Kensho Data: data feeds, LLM-ready APIs, RatingsXpress. ~½ of MI revenue by size but growing faster.</span></div>
+        </div>
+      </div>
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Switching costs — why customers stay</div>
+          <ul class="sdb-bullets">
+            <li>Capital IQ Pro is embedded in Excel, APIs, internal databases and regulatory reports</li>
+            <li>Replacing it requires rebuilding integrations, retraining staff, reconciling historical data gaps, and compliance sign-off</li>
+            <li>Enterprise contracts span multiple business units — one team's renewal anchors the broader relationship</li>
+            <li>AI customers in MI are growing contract value 60% faster than average (Q2 2026 call)</li>
+          </ul>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">Competitive disadvantages (honest view)</div>
+          <ul class="sdb-bullets">
+            <li>Bloomberg has a stronger real-time trading and messaging ecosystem</li>
+            <li>LSEG has deep exchange, pricing and desktop data</li>
+            <li>FactSet is often seen as easier to deploy for asset managers</li>
+            <li>20% reported margin is substantially below Ratings, Energy and Indices</li>
+          </ul>
+        </div>
+        <div class="sdb-moat" style="background:var(--pu-l);color:var(--pu)">
+          🏰 Moat: <b style="margin-left:4px">Moderate to wide</b> — strong switching costs and data breadth, but not as monopolistic as Ratings or Indices
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- INDICES -->
+  <details class="seg-deep">
+    <summary class="seg-deep-hdr">
+      <span class="sdh-dot" style="background:#28a745"></span>
+      <span class="sdh-name">S&P Dow Jones Indices</span>
+      <div class="sdh-meta">
+        <span>Revenue <b>$1.85B</b></span>
+        <span>Op. margin <b style="color:#28a745">69% GAAP · 71% adj.</b></span>
+        <span><span class="pill" style="background:var(--gn-l);color:var(--gn-d)">Peak margin · 13 record qtrs</span></span>
+      </div>
+      <span class="sdh-chevron">▾</span>
+    </summary>
+    <div class="seg-deep-body">
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Revenue mix — FY2025</div>
+          <div class="mini-bars">
+            <div class="mini-bar-row"><span class="mini-bar-label">Asset-linked fees (AUM)</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:65%;background:#28a745"></div></div><span class="mini-bar-pct">65%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Exchange-traded royalties</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:18%;background:#5cb85c"></div></div><span class="mini-bar-pct">18%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Data subscriptions</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:17%;background:#86d396"></div></div><span class="mini-bar-pct">17%</span></div>
+          </div>
+          <div class="sdb-insight" style="margin-top:10px"><b>65% of revenue scales with global AUM</b> — zero incremental cost per dollar of new inflows. This is why Indices has the highest margin despite being the smallest segment by revenue. In Q2 2026, the S&P 500 ETF became the first in history to breach <b>$1 trillion AUM</b>.</div>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">FY2025 financials</div>
+          <div class="sdb-row"><span class="sdb-row-label">Revenue</span><span class="sdb-row-val">$1.85B</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Asset-linked fees</span><span class="sdb-row-val">$1.21B (65%)</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Operating margin (GAAP)</span><span class="sdb-row-val up">69%</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Q2 2026 revenue growth</span><span class="sdb-row-val up">+20% (13th record quarter)</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Q2 2026 margin</span><span class="sdb-row-val up">71.5%</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Note</span><span class="sdb-row-val" style="font-size:11px">CME Group owns a minority interest — net margin after NCI is 51%</span></div>
+        </div>
+      </div>
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Why the S&P 500 cannot be easily replaced</div>
+          <ul class="sdb-bullets">
+            <li>Self-reinforcing network effect: more funds track it → more derivatives reference it → more liquidity → higher value to license</li>
+            <li>Its value lies in identity, historical continuity, media recognition, and the global derivative ecosystem built around it</li>
+            <li>Another portfolio of 500 US companies would not carry the same weight — the brand is the standard</li>
+            <li>Coordination problem: all participants would need to switch simultaneously for a competitor index to replace it</li>
+          </ul>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">Competitors</div>
+          <ul class="sdb-bullets">
+            <li>MSCI — closest peer, dominant in non-US equity benchmarks</li>
+            <li>FTSE Russell — strong in UK and global mandates</li>
+            <li>Bloomberg Indices, Nasdaq, Solactive, Morningstar Indexes</li>
+          </ul>
+        </div>
+        <div class="sdb-moat" style="background:var(--gn-l);color:var(--gn-d)">
+          🏰 Moat: <b style="margin-left:4px">Very wide</b> — standards-based network effect. Once established, customers face a collective coordination problem to move away.
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ENERGY -->
+  <details class="seg-deep">
+    <summary class="seg-deep-hdr">
+      <span class="sdh-dot" style="background:#c87d00"></span>
+      <span class="sdh-name">S&P Global Energy</span>
+      <div class="sdh-meta">
+        <span>Revenue <b>$2.6B</b></span>
+        <span>Op. margin <b style="color:var(--am)">41% GAAP · 48% adj.</b></span>
+        <span><span class="pill" style="background:var(--am-l);color:var(--am)">Formerly Commodity Insights</span></span>
+      </div>
+      <span class="sdh-chevron">▾</span>
+    </summary>
+    <div class="seg-deep-body">
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">Revenue mix — FY2025</div>
+          <div class="mini-bars">
+            <div class="mini-bar-row"><span class="mini-bar-label">Subscriptions</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:88%;background:#c87d00"></div></div><span class="mini-bar-pct">88%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Usage-based royalties</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:5%;background:#e8a82a"></div></div><span class="mini-bar-pct">5%</span></div>
+            <div class="mini-bar-row"><span class="mini-bar-label">Non-subscription</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:7%;background:#f5c96a"></div></div><span class="mini-bar-pct">7%</span></div>
+          </div>
+          <div class="sdb-insight" style="margin-top:10px"><b>Platts benchmark effect:</b> Once physical contracts, derivatives and futures settle against a Platts price assessment, market participants cannot easily switch — they would face contract mismatches, liquidity fragmentation, and counterparty risk. Benchmark adoption becomes self-reinforcing, like Indices but in commodity markets.</div>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">Q2 2026 headwind</div>
+          <div class="sdb-row"><span class="sdb-row-label">Q2 2026 revenue growth</span><span class="sdb-row-val" style="color:var(--rd)">+3% YoY only</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">Cause</span><span class="sdb-row-val" style="font-size:11px">Iran conflict + volatility dampened Global Trading Services and contract renewals</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">New acquisition</span><span class="sdb-row-val">datacenterHawk (pending H2 2026 close)</span></div>
+          <div class="sdb-row"><span class="sdb-row-label">New platform</span><span class="sdb-row-val">CERA Titan — AI-native upstream data, launching 2026</span></div>
+        </div>
+      </div>
+      <div class="sdb-col">
+        <div class="sdb-section">
+          <div class="sdb-title">What Platts actually sells</div>
+          <ul class="sdb-bullets">
+            <li>Price assessments — daily opinions on where commodities cleared, used as settlement prices in contracts</li>
+            <li>Benchmark prices for oil, gas, LNG, power, metals, chemicals, shipping, carbon</li>
+            <li>CERAWeek — the world's largest energy industry conference (non-subscription revenue)</li>
+            <li>Supply-demand forecasts, energy-transition analytics, advisory</li>
+          </ul>
+        </div>
+        <div class="sdb-section">
+          <div class="sdb-title">AI infrastructure opportunity</div>
+          <ul class="sdb-bullets">
+            <li>datacenterHawk acquisition connects AI data center demand with power markets, grid constraints and supply chains</li>
+            <li>Energy segment is being repositioned to serve AI infrastructure clients — a structural new demand vector</li>
+            <li>Strategy: "enabling clients to understand supply chains for AI infrastructure and power grids"</li>
+          </ul>
+        </div>
+        <div class="sdb-moat" style="background:var(--am-l);color:var(--am)">
+          🏰 Moat: <b style="margin-left:4px">Wide</b> — benchmark-based network effect (similar to Indices), but Argus and specialist vendors provide meaningful competition in several commodity verticals
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ECONOMIC MOAT VISUAL -->
+  <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin:28px 0 14px">Economic moat by segment</div>
+  <div class="moat-grid" style="margin-bottom:8px">
+    <div class="moat-card">
+      <div class="moat-card-seg">Ratings</div>
+      <div class="moat-stars"><span class="moat-star" style="background:#0071e3"></span><span class="moat-star" style="background:#0071e3"></span><span class="moat-star" style="background:#0071e3"></span><span class="moat-star" style="background:#0071e3"></span><span class="moat-star" style="background:#0071e3"></span></div>
+      <div class="moat-card-rating" style="color:var(--blue)">Very wide</div>
+      <div class="moat-card-desc">Institutional trust moat + regulatory acceptance + decades of default history. A new entrant cannot buy the acceptance of bond investors and regulators — it must earn it over decades.</div>
+    </div>
+    <div class="moat-card">
+      <div class="moat-card-seg">Indices</div>
+      <div class="moat-stars"><span class="moat-star" style="background:#28a745"></span><span class="moat-star" style="background:#28a745"></span><span class="moat-star" style="background:#28a745"></span><span class="moat-star" style="background:#28a745"></span><span class="moat-star" style="background:#28a745"></span></div>
+      <div class="moat-card-rating" style="color:var(--gn-d)">Very wide</div>
+      <div class="moat-card-desc">Standards-based network effect. The S&P 500 has trillions in derivatives and mandates anchored to it. Participants face a collective coordination problem to move — making it nearly irreplaceable.</div>
+    </div>
+    <div class="moat-card">
+      <div class="moat-card-seg">Energy (Platts)</div>
+      <div class="moat-stars"><span class="moat-star" style="background:#c87d00"></span><span class="moat-star" style="background:#c87d00"></span><span class="moat-star" style="background:#c87d00"></span><span class="moat-star" style="background:#c87d00"></span><span class="moat-star" style="background:var(--s3)"></span></div>
+      <div class="moat-card-rating" style="color:var(--am)">Wide</div>
+      <div class="moat-card-desc">Benchmark network effect in commodity markets. Physical contracts, derivatives and futures that settle on Platts prices create self-reinforcing adoption. Argus provides real competition in several verticals.</div>
+    </div>
+    <div class="moat-card">
+      <div class="moat-card-seg">Market Intelligence</div>
+      <div class="moat-stars"><span class="moat-star" style="background:#7d3fd1"></span><span class="moat-star" style="background:#7d3fd1"></span><span class="moat-star" style="background:#7d3fd1"></span><span class="moat-star" style="background:var(--s3)"></span><span class="moat-star" style="background:var(--s3)"></span></div>
+      <div class="moat-card-rating" style="color:var(--pu)">Moderate → wide</div>
+      <div class="moat-card-desc">High switching costs (Capital IQ embedded in workflows, models and regulatory reports) and data breadth. But Bloomberg, LSEG and FactSet are credible alternatives — this is a competitive market, not a monopoly.</div>
+    </div>
+  </div>
+  <div class="note-box" style="margin-bottom:24px">The company's consolidated moat is anchored by Ratings and Indices — two businesses with near-irreplaceable standards-based positions. Market Intelligence adds scale and recurring revenue, but is the segment most exposed to AI disruption of data delivery channels.</div>
+
+  <!-- Competitors -->
+  <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px">Competitors & peers</div>
+  <div class="comp-wrap">
+    <table class="comp-table">
+      <thead><tr><th>Company</th><th>Primary overlap</th><th>Key distinction</th><th>Moat</th></tr></thead>
+      <tbody>
+        <tr class="spgi-row"><td>S&P Global (SPGI) ★</td><td>Ratings, Indices, MI, Energy</td><td>Widest segment spread; S&P 500 brand; largest credit rater; post-spin pure-play financial data</td><td><span class="mbadge mbw">Very wide</span></td></tr>
+        <tr><td>Moody's (MCO)</td><td>Ratings, analytics</td><td>Duopoly partner in ratings; issuer-pays model; less index exposure; trades at ~31× P/E</td><td><span class="mbadge mbw">Very wide</span></td></tr>
+        <tr><td>MSCI Inc. (MSCI)</td><td>Indices, analytics, ESG</td><td>Dominant in non-US institutional equity benchmarks; higher AUM-fee mix; closest Indices peer</td><td><span class="mbadge mbw">Wide</span></td></tr>
+        <tr><td>FactSet Research (FDS)</td><td>Market data, analytics</td><td>Competes directly with Capital IQ Pro for buy-side workflow; easier to deploy; more AI-disruptable</td><td><span class="mbadge mbm">Moderate</span></td></tr>
+        <tr><td>Bloomberg LP (private)</td><td>Market data, news, analytics</td><td>Terminal dominates front-office and real-time trading; Capital IQ Pro's toughest rival</td><td><span class="mbadge mbw">Wide</span></td></tr>
+        <tr><td>Argus Media</td><td>Energy benchmarks</td><td>Closest Platts competitor in commodity price assessments; real competition in several verticals</td><td><span class="mbadge mbm">Moderate</span></td></tr>
+        <tr><td>LSEG Data & Analytics</td><td>Market data, analytics</td><td>Post-Refinitiv, strong in exchange data, pricing, desktop; MI's second-largest direct competitor</td><td><span class="mbadge mbw">Wide</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ FINANCIALS ══════════════ -->
+<section id="fin" class="sec">
+  <div class="sh"><div class="sey">Step 2</div><div class="st">8-Point Financials</div><div class="ss">10-year history 2015–2025 · GAAP consolidated · Source: SEC 10-K filings & earnings releases</div></div>
+
+  <div class="alert ai" style="margin-bottom:18px"><span class="aico">ℹ</span><div><b>Data notes:</b> 2016 net income spike includes a large gain on the J.D. Power disposition (not recurring). 2022 represents the first full year of the IHS Markit merger — revenue jumps +35%, EPS diluted by merger costs and share issuance. D/E and ICR prior to 2022 are excluded as the equity base and debt structure are not comparable to the post-merger entity. From Q3 2026, Mobility reports as discontinued operations.</div></div>
+
+  <!-- KPI STRIP -->
+  <div class="g4" style="margin-bottom:18px">
+    <div class="kpi"><div class="klbl">Gross margin FY25</div><div class="kval">70.2%</div><div class="kup">↑ from 67.7% in 2015</div></div>
+    <div class="kpi"><div class="klbl">Net margin FY25</div><div class="kval">29.1%</div><div class="kup">Threshold: &gt;15% ✓</div></div>
+    <div class="kpi"><div class="klbl">Q2 2026 adj. op. margin</div><div class="kval">54.3%</div><div class="kup">Q3 est: $4.43 EPS · $3.64B rev</div></div>
+    <div class="kpi"><div class="klbl">Interest coverage</div><div class="kval">22.8×</div><div class="kup">10-yr median: ~19.6×</div></div>
+  </div>
+
+  <!-- 8 METRIC CARDS WITH 10-YEAR CHARTS -->
+  <div class="mgrid" style="margin-bottom:14px">
+
+    <!-- 1. Gross margin -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Gross profit margin</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c1" role="img" aria-label="Gross margin 2015 to 2025, ranging from 67.7 to 73.7 percent, threshold 30 percent">67.7, 68.7, 72.1, 70.6, 70.5, 71.9, 73.7, 66.4, 66.9, 69.1, 70.2</canvas></div>
+      <div class="mc-ft">FY25: 70.2% · Threshold: &gt;30% · 10yr range: 66.4–73.7%</div>
+    </div>
+
+    <!-- 2. Operating profit -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Operating profit ($B)</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c2" role="img" aria-label="Operating profit 2015 to 2025, rising from 1.61B to 6.44B">1.61, 1.95, 2.00, 2.21, 2.59, 3.62, 4.22, 4.94, 4.02, 5.58, 6.44</canvas></div>
+      <div class="mc-ft">FY25: $6.44B · Q2 2026: $1.81B (+17%) · Consistent growth except 2023 merger costs</div>
+    </div>
+
+    <!-- 3. ROE -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Return on equity</span>
+        <span class="mc-b bna">N/A</span>
+      </div>
+      <div class="mc-ch"><canvas id="c3" role="img" aria-label="ROE not applicable due to IHS Markit merger structural distortion">Excluded from scoring</canvas></div>
+      <div class="mc-ft">Excluded — IHS merger distorted equity base; see note below</div>
+    </div>
+
+    <!-- 4. Debt / Equity -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Debt / Equity</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c4" role="img" aria-label="Debt to equity shown for 2022 to 2025 only, post merger, 0.38 times, well below threshold 1.0">Post-merger only: 2022–2025 comparable</canvas></div>
+      <div class="mc-ft">FY25: 0.38× · Q2 2026 debt raised to $15.2B · Threshold: ≤1.0×</div>
+    </div>
+
+    <!-- 5. Free cash flow -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Free cash flow ($B)</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c5" role="img" aria-label="Free cash flow 2015 to 2025 growing from 0.09B to 5.46B with 2015 low due to J.D. Power sale">0.09, 1.44, 1.89, 1.95, 2.66, 3.49, 3.56, 2.51, 3.57, 5.57, 5.46</canvas></div>
+      <div class="mc-ft">FY25: $5.46B · Strong upward trend over decade despite 2015 J.D. Power outlier</div>
+    </div>
+
+    <!-- 6. Net profit margin -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Net profit margin</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c6" role="img" aria-label="Net margin 2015 to 2025, volatile 21 to 37 percent range, threshold 15 percent">21.8, 37.3, 24.7, 31.3, 31.7, 31.5, 36.4, 29.1, 21.0, 27.1, 29.1</canvas></div>
+      <div class="mc-ft">FY25: 29.1% · 2016 spike = J.D. Power gain · 2023 dip = merger costs · Threshold: &gt;15%</div>
+    </div>
+
+    <!-- 7. EPS -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">EPS diluted (GAAP)</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c7" role="img" aria-label="Diluted EPS 2015 to 2025, growing from 4.32 to 14.66 with merger dip in 2022 and 2023">4.32, 7.64, 5.48, 7.73, 8.60, 9.66, 12.51, 9.69, 8.23, 12.35, 14.66</canvas></div>
+      <div class="mc-ft">FY25: $14.66 · Q2 2026 GAAP: $4.12 (+18%) · Merger diluted 2022–2023; trend resumed</div>
+    </div>
+
+    <!-- 8. Interest coverage -->
+    <div class="mc">
+      <div class="mc-h">
+        <span class="mc-n">Interest coverage ratio</span>
+        <span class="mc-b bp">PASS 1/1</span>
+      </div>
+      <div class="mc-ch"><canvas id="c8" role="img" aria-label="Interest coverage shown for 2020 to 2025, ranging from 17 to 35 times, threshold 4 times">Shown 2020–2025 (post-debt restructure comparable)</canvas></div>
+      <div class="mc-ft">FY25: 22.8× · 10-yr median: 19.6× · Min: 9.9× · Threshold: &gt;4×</div>
+    </div>
+
+  </div>
+
+  <div class="note-box" style="margin-bottom:14px"><b>ROE — N/A (excluded from denominator):</b> The 2022 IHS Markit merger expanded SPGI's equity base from ~$479M (2019) to ~$33B+ as new shares were issued at fair value in the all-stock deal. This produced ROE readings from 7% to over 400% in the 10-year window — mechanically extreme, not reflective of business quality. Current normalised ROE sits in the mid-teens (14–18%). Treated as informational only; denominator remains 7 applicable criteria.</div>
+
+  <div class="alert aw" style="margin-bottom:14px"><span class="aico">⚠</span><div><b>D/E alert — Q2 2026 balance sheet shift:</b> Total debt rose to $15.2B (from $10.6B in Q1) reflecting new senior notes tied to Mobility separation. Gross leverage expected to reach 2.7–2.8× EBITDA by end-2026, temporarily above the 2.0–2.5× target. Management projects return to target range by end-2027. Still passes D/E &lt;1.0× threshold on book equity basis, but leverage trajectory warrants monitoring.</div></div>
+
+  <div class="score-row"><div class="sdots"><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--s3)"></div><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--gn)"></div><div class="sdot" style="background:var(--gn)"></div></div><span class="slbl">7 pass · 1 N/A · ROE excluded from denominator</span><span class="sval">7 / 7 — High conviction</span></div>
+</section>
+
+<!-- ══════════════ VALUATION ══════════════ -->
+<section id="val" class="sec">
+  <div class="sh"><div class="sey">Step 4</div><div class="st">Valuation Framework</div><div class="ss">Post-spin analysis · September 28, 2026</div></div>
+  <div class="alert ai" style="margin-bottom:20px"><span class="aico">ℹ</span><div><b>Q2 2026 EPS complexity:</b> Initial reports circulated pro forma EPS of $4.08 vs. inflated consensus of $4.75, appearing to be a 14% miss. The actual adjusted EPS was $4.83 (+23% YoY). The misread triggered a ~5% premarket drop that partially recovered. Illustrates how post-spin accounting complexity can distort short-term market perception.</div></div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px">Part A — Current snapshot</div>
+  <div class="v4">
+    <div class="vc"><div class="vc-l">P/E trailing</div><div class="vc-n">24.75×</div><div class="vc-c">TTM EPS $16.30 · vs 10-yr avg 32–38×</div></div>
+    <div class="vc"><div class="vc-l">P/E forward FY26</div><div class="vc-n">23.07×</div><div class="vc-c">FY26 guide $17.50–$17.75 · Q3 est. $4.43</div></div>
+    <div class="vc"><div class="vc-l">EV/EBITDA (NTM)</div><div class="vc-n">17.4×</div><div class="vc-c">10-yr median 21.1× · 17% below median</div></div>
+    <div class="vc"><div class="vc-l">FY26 Buyback</div><div class="vc-n">&gt;$7B</div><div class="vc-c">&gt;5.9% of $119B mkt cap · raised from $4.5B</div></div>
+  </div>
+  <!-- PEER COMPARISON -->
+  <div class="peer-eyebrow" style="margin-top:4px">Peer comparison — valuation multiples (Sep 28, 2026)</div>
+  <div class="peer-table-wrap" style="margin-bottom:6px">
+    <table class="peer-table">
+      <thead>
+        <tr>
+          <th style="width:200px">Company</th>
+          <th>Price</th>
+          <th>Mkt cap</th>
+          <th>Trailing P/E</th>
+          <th>Forward P/E</th>
+          <th>EV/EBITDA</th>
+          <th>Rev growth</th>
+          <th>Op. margin</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- SPGI -->
+        <tr class="spgi-row">
+          <td class="peer-cell">
+            <div class="peer-co">
+              <div class="peer-logo" style="background:var(--blue-l);color:var(--blue)">SPGI</div>
+              <div><div class="peer-co-name">S&amp;P Global</div><div class="peer-co-ticker">NYSE: SPGI</div></div>
+            </div>
+          </td>
+          <td class="peer-cell"><div class="peer-metric">$404</div><div class="peer-metric-sub">↓23% 1yr</div></td>
+          <td class="peer-cell"><div class="peer-metric">$119B</div><div class="peer-metric-sub">Post-spin</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-win">24.75×<span class="peer-badge pb-cheap">Cheapest</span></div><div class="peer-metric-sub">TTM EPS ~$16.30</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-win">23.07×<span class="peer-badge pb-cheap">Cheapest</span></div><div class="peer-metric-sub">FY26 guide $17.50–17.75</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-win">17.4×<span class="peer-badge pb-cheap">Cheapest</span></div><div class="peer-metric-sub">10-yr median 21.1× · 17% below</div></td>
+          <td class="peer-cell"><div class="peer-metric">+11%</div><div class="peer-metric-sub">Q2 2026 YoY</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-win">54.3%</div><div class="peer-metric-sub">Adj. Q2 2026</div></td>
+          <td class="peer-cell"><div class="peer-metric" style="font-size:18px">🟡</div><div class="peer-metric-sub" style="color:var(--am)">Fair/Execution</div></td>
+        </tr>
+        <!-- MCO -->
+        <tr>
+          <td class="peer-cell">
+            <div class="peer-co">
+              <div class="peer-logo" style="background:rgba(255,59,48,0.1);color:#ff3b30">MCO</div>
+              <div><div class="peer-co-name">Moody's Corp.</div><div class="peer-co-ticker">NYSE: MCO</div></div>
+            </div>
+          </td>
+          <td class="peer-cell"><div class="peer-metric">$468</div><div class="peer-metric-sub">↓12.4% 1yr</div></td>
+          <td class="peer-cell"><div class="peer-metric">$82B</div><div class="peer-metric-sub">Smaller by cap</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">30.3×<span class="peer-badge pb-rich">Rich</span></div><div class="peer-metric-sub">TTM rev ~$7.9B</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">27.7×</div><div class="peer-metric-sub">FY26 guide $16.50–17.00</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">20.4×</div><div class="peer-metric-sub">EV/FCF ~37×</div></td>
+          <td class="peer-cell"><div class="peer-metric">+15%</div><div class="peer-metric-sub">Q2 2026 YoY</div></td>
+          <td class="peer-cell"><div class="peer-metric">55.3%</div><div class="peer-metric-sub">Analytics adj. margin</div></td>
+          <td class="peer-cell"><div class="peer-metric" style="font-size:18px">🔴</div><div class="peer-metric-sub" style="color:var(--rd)">Premium/Rich</div></td>
+        </tr>
+        <!-- MSCI -->
+        <tr>
+          <td class="peer-cell">
+            <div class="peer-co">
+              <div class="peer-logo" style="background:rgba(48,209,88,0.12);color:#28a745">MSCI</div>
+              <div><div class="peer-co-name">MSCI Inc.</div><div class="peer-co-ticker">NYSE: MSCI</div></div>
+            </div>
+          </td>
+          <td class="peer-cell"><div class="peer-metric">$551</div><div class="peer-metric-sub">↑9.5% 1yr</div></td>
+          <td class="peer-cell"><div class="peer-metric">$40B</div><div class="peer-metric-sub">Smaller; high-margin</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">31.4×<span class="peer-badge pb-rich">Richest</span></div><div class="peer-metric-sub">TTM EPS $18.28</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">25.7×</div><div class="peer-metric-sub">Fwd EPS est. ~$21.4</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-high">23.2×</div><div class="peer-metric-sub">EV/FCF ~29×</div></td>
+          <td class="peer-cell"><div class="peer-metric">+15%</div><div class="peer-metric-sub">TTM revenue $3.24B</div></td>
+          <td class="peer-cell"><div class="peer-metric peer-win">~72%</div><div class="peer-metric-sub">Index-driven AUM fees</div></td>
+          <td class="peer-cell"><div class="peer-metric" style="font-size:18px">🔴</div><div class="peer-metric-sub" style="color:var(--rd)">Premium/Rich</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Relative bar comparison -->
+  <div style="background:var(--surface);border-radius:18px;padding:22px 24px;box-shadow:var(--sh0);margin-bottom:6px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;letter-spacing:-.01em">Relative multiple positioning</div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:18px">Each bar scaled to the richest peer = 100%. SPGI shown in blue, MCO in red, MSCI in green.</div>
+
+    <!-- Forward P/E -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="font-weight:600">Forward P/E</span><span style="color:var(--tx2)">Lower = cheaper</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:var(--blue)">SPGI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:83.4%;height:9px;background:#0071e3;border-radius:5px;transition:width .9s cubic-bezier(.16,1,.3,1)"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--blue)">23.1×</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#ff3b30">MCO</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:100%;height:9px;background:#ff3b30;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#ff3b30">27.7×</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#28a745">MSCI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:92.8%;height:9px;background:#28a745;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#28a745">25.7×</span></div>
+      </div>
+    </div>
+
+    <!-- EV/EBITDA -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="font-weight:600">EV / EBITDA</span><span style="color:var(--tx2)">Lower = cheaper</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:var(--blue)">SPGI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:75.0%;height:9px;background:#0071e3;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--blue)">17.4×</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#ff3b30">MCO</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:87.9%;height:9px;background:#ff3b30;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#ff3b30">20.4×</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#28a745">MSCI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:100%;height:9px;background:#28a745;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#28a745">23.2×</span></div>
+      </div>
+    </div>
+
+    <!-- Op margin -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="font-weight:600">Operating margin (adj.)</span><span style="color:var(--tx2)">Higher = better</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:var(--blue)">SPGI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:75.4%;height:9px;background:#0071e3;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--blue)">54.3%</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#ff3b30">MCO</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:76.8%;height:9px;background:#ff3b30;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#ff3b30">55.3%</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#28a745">MSCI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:100%;height:9px;background:#28a745;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#28a745">~72%</span></div>
+      </div>
+    </div>
+
+    <!-- Rev growth -->
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="font-weight:600">Revenue growth (Q2 2026 YoY)</span><span style="color:var(--tx2)">Higher = better</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:var(--blue)">SPGI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:73.3%;height:9px;background:#0071e3;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--blue)">+11%</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#ff3b30">MCO</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:100%;height:9px;background:#ff3b30;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#ff3b30">+15%</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:36px;font-weight:600;color:#28a745">MSCI</span><div style="flex:1;height:9px;background:var(--s2);border-radius:5px;overflow:hidden"><div style="width:100%;height:9px;background:#28a745;border-radius:5px"></div></div><span style="width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#28a745">+15%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key insight callout -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px">
+    <div class="alert ag" style="border-radius:14px;padding:15px 17px">
+      <span class="aico">✅</span>
+      <div><b>SPGI is the cheapest of the three on every valuation multiple</b> — forward P/E 23.1× vs MCO 27.7× and MSCI 25.7×. EV/EBITDA 17.4× vs peers at 20–23×. All three peers have de-rated since August but SPGI has de-rated most. GF Value $539 implies 33% upside from ~$404. Analyst consensus target $520 implies +28% upside.</div>
+    </div>
+    <div class="alert aw" style="border-radius:14px;padding:15px 17px">
+      <span class="aico">⚠</span>
+      <div><b>MCO and MSCI remain more expensive despite both de-rating since August.</b> MCO: $468 (↓12% 1yr), fwd P/E 27.7×. MSCI: $551 (↑9.5% 1yr), fwd P/E 25.7×. Both peers still growing faster (+12–15% rev growth vs SPGI +11%). MSCI's ~56% op margin and SPGI's 54.3% are now near-parity. Valuation gap narrowing — watch Q3 earnings Oct 22.</div>
+    </div>
+  </div>
+
+  <!-- ICE footnote -->
+  <div class="ice-note" style="margin-bottom:20px">
+    <b>Why ICE was excluded from the primary peer set:</b> Intercontinental Exchange (NYSE: ICE, ~$150, trailing P/E 21.9×, fwd P/E 18.8×, EV/EBITDA 15.9×) is a legitimate financial infrastructure company but is primarily an exchange operator (NYSE, futures markets) and mortgage technology provider — financial data and analytics are a secondary revenue stream. Its lower multiples reflect exchange economics, not financial intelligence economics. Comparing SPGI to ICE on a P/E or EV/EBITDA basis would understate SPGI's relative valuation. ICE's $5.7B MarketAxess acquisition (announced Jul 2026) deepens its fixed-income data footprint and could make it a more relevant peer in 2–3 years. Source: StockAnalysis, GuruFocus, Aug 2026.
+  </div>
+
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:20px 0 10px">Part B — Historical valuation</div>
+  <div class="hcard">
+    <div class="hcard-t">Trailing P/E compression — 2023 to Aug 2026</div>
+    <div class="hchart"><canvas id="hc" role="img" aria-label="P/E compressed from 55x in mid 2023 to 27x today below 32 to 38 ten year average">P/E de-rated from 55x (Jun 2023) to ~27x today</canvas></div>
+    <div class="hlg"><span><span class="hll" style="background:var(--blue)"></span>Trailing P/E</span><span><span class="hld"></span>10-yr avg band (32–38×)</span></div>
+    <div style="margin-top:14px;padding:14px 16px;background:var(--s2);border-radius:12px;font-size:13px;color:var(--tx2);line-height:1.6">Q2 2026 confirmed margin expansion is executing — adj. operating margin hit 54.3%, Ratings and Indices delivered record results. On forward P/E (~24×), SPGI is below its own history with an improved post-spin earnings profile. <b style="color:var(--am)">Read: fair, leaning toward fair-to-attractive if Q3 execution holds.</b></div>
+  </div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:20px 0 10px">Part C — Scenario returns (2-year horizon)</div>
+  <div class="scns">
+    <div class="scn scn-bear"><div class="scn-lbl">Bear</div><div class="scn-ret">−5 to 0%</div><div class="scn-d">AI erodes MI pricing; MI leadership gap unfilled; Ratings issuance normalises; leverage at 2.7–2.8× limits flexibility. Multiple compresses to ~20×.</div></div>
+    <div class="scn scn-base"><div class="scn-lbl">Base</div><div class="scn-ret">10 to 15%</div><div class="scn-d">FY26 guidance met (6–8% organic, EPS $17.50–$17.75). MI successor named. $7B buyback on schedule. Multiple re-rates from ~24× toward ~28× as post-spin clarity builds.</div></div>
+    <div class="scn scn-bull"><div class="scn-lbl">Bull</div><div class="scn-ret">20 to 28%</div><div class="scn-d">Ratings and Indices sustain records. MI EDO reorganisation accelerates AI growth. Benchmark revenue (~two-thirds of total) sustains 15%+. Re-rates toward Moody's-like 30–32×.</div></div>
+  </div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:0 0 10px">Part D — Multi-bagger test</div>
+  <div class="mb-card">
+    <div class="mb-r"><div class="mb-ico mb-fail">✗</div><div class="mb-t"><b>Revenue can 3–5×:</b> Unlikely. Pro forma revenue ~$13.6B at 6–8% CAGR; 3× takes over a decade. SPGI is a market-share and margin story in oligopolistic markets, not a market-creation story.</div></div>
+    <div class="mb-r"><div class="mb-ico mb-pass">✓</div><div class="mb-t"><b>Margins can expand:</b> Executing. Adj. op. margin 54.3% in Q2 2026 (+200bps YoY). Post-spin removes lower-margin Mobility. AI productivity at ~60% of $100M EDO cost-save target. Guided +75–100bps further in FY26.</div></div>
+    <div class="mb-r"><div class="mb-ico mb-may">~</div><div class="mb-t"><b>Multiple can hold or expand:</b> More credible post-Q2 but unconfirmed. Q2 confirmed the post-spin thesis is working. MI leadership gap and elevated leverage cap a full re-rating until Q3 provides cleaner evidence.</div></div>
+    <div style="margin-top:6px;padding:14px 16px;background:var(--am-l);border-radius:12px;font-size:13px;color:var(--am);font-weight:500">⚠ Possible but stretched — margin expansion executing; revenue 3–5× remains implausible. Portfolio fit: compounder/income sleeve, not multi-bagger/growth sleeve.</div>
+  </div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:20px 0 10px">Part E — Verdict</div>
+  <div class="verd">
+    <div class="verd-ico">🟡</div>
+    <div><div class="verd-t">🟡 Fair / Leaning Attractive — discount widened to ~25% below peers</div><div class="verd-d">Post-Q2 2026, the picture has partially clarified. Mobility spin is done and already improving margins. Ratings and Indices delivered records. The $7B buyback signals management confidence. Forward P/E 23.1× is now well below own history (5-yr avg 36.8×) and ~25% below peers. Stock has de-rated to $404, trading 18% below GF Value ($539) and 23% below analyst mean target ($520). 52-wk range: $363–$525.<br><br>What keeps this at 🟡 rather than 🟢: Market Intelligence leadership gap (no named successor as of this update), gross leverage temporarily elevated, and AI disruption risk to MI data pricing not yet definitively answered.<br><br>Next checkpoint: <b>Q3 2026 earnings — October 29, 2026.</b> Is an MI President named? Does Ratings hold above strong Q2 issuance? Does Energy recover? If Q3 answers those cleanly, this moves toward 🟢.</div></div>
+  </div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:0 0 10px">Risk register</div>
+  <div class="risk-wrap">
+    <div class="rr"><span class="rsev rh">HIGH</span><div class="rtext"><strong>Market Intelligence leadership vacuum</strong>Saha departed Jul 30. No successor named. MI is SPGI's largest revenue segment (~34% pro forma). Unresolved as of Sep 28, 2026.</div></div>
+    <div class="rr"><span class="rsev rh">HIGH</span><div class="rtext"><strong>AI disruption — Market Intelligence</strong>Competitors could commoditise premium data and analytics. Elongated AI contract sales cycles noted on Q2 2026 earnings call.</div></div>
+    <div class="rr"><span class="rsev rm">MED</span><div class="rtext"><strong>Leverage above target range</strong>Gross leverage expected at 2.7–2.8× EBITDA end-2026, above 2.0–2.5× target. $7B buyback partly financed by new debt. Management projects return to range by end-2027.</div></div>
+    <div class="rr"><span class="rsev rm">MED</span><div class="rtext"><strong>Energy segment headwind</strong>Revenue grew only 3% in Q2 2026. Iran conflict dampened trading and contract renewals. Management assumed stabilisation by end-Q2 — still being watched in H2.</div></div>
+    <div class="rr"><span class="rsev rm">MED</span><div class="rtext"><strong>Ratings issuance cycle normalisation</strong>Q2 2026 Ratings revenue +17% on exceptional IG issuance. Transaction revenue is cyclical and may moderate if credit conditions tighten in H2 2026.</div></div>
+    <div class="rr"><span class="rsev rl">LOW</span><div class="rtext"><strong>EDO reorganisation execution</strong>Folding Enterprise Data Organisation into Bhathena's office is a structural bet. Whether it accelerates AI product delivery or creates coordination friction — 2–3 quarters to assess.</div></div>
+    <div class="rr"><span class="rsev rm">MED</span><div class="rtext"><strong>AI disruption valuation debate</strong>Multiple analysts and media framing SPGI as facing an "AI Test" — whether premium data pricing survives as AI democratises financial information. Counter: OpenZeppelin + Kaiko + Microsoft Copilot integration suggest SPGI is repositioning as AI infrastructure, not defending legacy positions. Remains an open narrative risk into Q3.</div></div>
+    <div class="rr"><span class="rsev rl">LOW</span><div class="rtext"><strong>Post-spin accounting complexity</strong>Recast financials, discontinued operations from Q3, new expense allocations. Demonstrated by the Q2 EPS misread that temporarily moved the stock.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ LATEST NEWS ══════════════ -->
+<section id="news" class="sec">
+  <div class="sh"><div class="sey">Latest</div><div class="st">News & Earnings Call</div><div class="ss">Most recent developments · updated August 22, 2026</div></div>
+
+  <!-- Q2 2026 EARNINGS HERO -->
+  <div class="news-hero" style="margin-bottom:24px">
+    <div class="nh-eyebrow">Q2 2026 earnings call · July 28, 2026</div>
+    <div class="nh-title">First quarter as a 4-segment pure-play — records in Ratings and Indices</div>
+    <div class="nh-body">Revenue exceeded management's own expectations on both a reported and organic constant-currency basis. Ratings and Indices delivered record results. Cheung's message: the simplified post-spin structure is already working, and the company is reinvesting productivity gains into its highest-growth benchmark businesses.</div>
+    <div class="nh-kpis">
+      <div class="nh-kpi"><div class="nh-kv">+11%</div><div class="nh-kl">Revenue growth YoY</div><div class="nh-kd up">$4.15B reported</div></div>
+      <div class="nh-kpi"><div class="nh-kv">+23%</div><div class="nh-kl">Adj. EPS growth YoY</div><div class="nh-kd up">$4.83 adjusted</div></div>
+      <div class="nh-kpi"><div class="nh-kv">54.3%</div><div class="nh-kl">Adj. operating margin</div><div class="nh-kd up">+200bps vs prior year</div></div>
+      <div class="nh-kpi"><div class="nh-kv">&gt;$7B</div><div class="nh-kl">FY26 buyback target</div><div class="nh-kd lt">Raised from $4.5B</div></div>
+    </div>
+  </div>
+
+  <!-- SEGMENT PERFORMANCE Q2 -->
+  <div class="ec-grid" style="margin-bottom:24px">
+    <div class="ec-card">
+      <div class="ec-cat">Q2 2026 segment performance</div>
+      <div class="metric-row"><span class="mr-lbl">Ratings revenue</span><span class="mr-val">+17% YoY <span class="mr-del mr-up">Record</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">— Transaction revenue</span><span class="mr-val">+25% YoY <span class="mr-del mr-up">IG issuance +high-20s%</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">Indices revenue</span><span class="mr-val">+20% YoY <span class="mr-del mr-up">13th consec. record quarter</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">— Indices margin</span><span class="mr-val">71.5% <span class="mr-del mr-up">TTM rev. &gt;$2B</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">Market Intelligence rev.</span><span class="mr-val">+6% YoY <span class="mr-del mr-up">Sub rev. +6%</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">Energy revenue</span><span class="mr-val">+3% YoY <span class="mr-del mr-dn">Iran conflict drag</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">Benchmark revenue total</span><span class="mr-val">+15% YoY <span class="mr-del mr-up">~2/3 of total rev.</span></span></div>
+      <div class="metric-row"><span class="mr-lbl">Recurring revenue</span><span class="mr-val">+8% YoY</span></div>
+    </div>
+    <div class="ec-card">
+      <div class="ec-cat">Key management Q&A — earnings call Jul 28</div>
+      <div class="ec-qs">
+        <div class="ec-q"><div class="ec-ql">Barclays — on MI reorganisation strategy</div><div class="ec-qt">"Can you elaborate on the strategic changes in MI and Energy?"</div><div class="ec-qa">Cheung: "We are simplifying execution rather than changing strategy. In Market Intelligence, the focus is on wrapping around customer needs — Kensho Data & Platforms for high-growth AI products, Enterprise Solutions for scale. In Energy, closer alignment with AI infrastructure clients."</div></div>
+        <div class="ec-q"><div class="ec-ql">Analyst — on AI monetisation</div><div class="ec-qt">"How is SPGI approaching AI monetisation with the modular data approach?"</div><div class="ec-qa">Cheung: "We maintain direct customer relationships and flexible content distribution. Kensho LLM-ready APIs accelerate adaptive retrieval. Customers are also looking to manage token costs — we respond with consumption pricing and additional data set pricing." CFO Aboaf added: "AI customers in MI are growing contract value 60% faster than average."</div></div>
+        <div class="ec-q"><div class="ec-ql">On MCP connectors attracting new clients</div><div class="ec-qa">Management noted that MCP (Model Context Protocol) connectors are attracting 15% of net new clients — a meaningful distribution channel signal for the AI-native era.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI DISRUPTION COUNTER: CRITICAL CALLOUT -->
+  <div class="alert ag" style="margin-bottom:24px;border-radius:16px;padding:18px 20px">
+    <span class="aico">✅</span>
+    <div><b>Critical callout — the Microsoft deal directly counters the AI bear thesis:</b> Announced August 12, 2026, S&P Global's expanded collaboration with Microsoft integrates SPGI data, insights and analytics into Microsoft 365 Copilot via the Kensho LLM-ready API. Rather than being disintermediated by AI, SPGI is becoming the premium data layer inside the world's most widely deployed enterprise AI product. This is the clearest signal yet that the company's data moat survives the AI transition — though MI pricing power remains the open question.</div>
+  </div>
+
+  <!-- INVESTOR CALLOUT: PERSHING SQUARE -->
+  <div class="inv-card">
+    <div class="inv-ico">🏦</div>
+    <div><div class="inv-t">Pershing Square (Bill Ackman) initiates new position in SPGI</div><div class="inv-b">In his Q2 2026 investor letter, Ackman disclosed a new stake in S&P Global — <b>"a business we have admired for decades and previously owned in 2017."</b> Pershing Square's entry thesis: the stock declined more than 25% from peak after the February 2026 guidance miss and AI disruption concerns, pushing the valuation to <b>19× earnings — the lowest in five years and a bargain level for one of the world's highest-quality businesses.</b> Ackman previously owned SPGI in 2017. His involvement is a significant institutional confidence signal at this valuation level.</div></div>
+  </div>
+
+  <div class="hdiv"></div>
+
+  <!-- NEWS GRID -->
+  <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:16px">Recent developments</div>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+
+    <div class="news-item" style="border-left:3px solid var(--rd-r);margin-bottom:24px">
+      <div class="ni-icon" style="background:var(--rd-l)">⚠️</div>
+      <div>
+        <div class="ni-date">Sep 22–28, 2026</div>
+        <div class="ni-title">Valuation debate intensifies — "AI Test" narrative and "pricey" concerns cited as stock falls to ~$404</div>
+        <div class="ni-body">Multiple analyst notes and news items through late September frame SPGI as facing an "AI Test" — whether its premium data pricing power survives as AI democratises financial information access. Simply Wall St and others characterise the stock as "pricey" at current levels despite the de-rating. The stock has now fallen ~23% YoY, widening the discount vs. both peers and its own history. Counter-narrative: the OpenZeppelin and Kaiko moves are direct responses to the AI disruption concern — repositioning SPGI as infrastructure within AI/crypto workflows rather than a legacy data vendor. Q3 earnings (Oct 22) is the next test of which narrative wins.</div>
+        <span class="ni-badge" style="background:var(--rd-l);color:var(--rd)">Bear narrative</span>
+        <span class="ni-badge" style="background:var(--am-l);color:var(--am)">Watch closely</span>
+      </div>
+    </div>
+
+    <div class="news-item" style="border-left:3px solid var(--blue);margin-bottom:12px">
+      <div class="ni-icon" style="background:var(--blue-l)">⛓️</div>
+      <div>
+        <div class="ni-date">Sep 17, 2026</div>
+        <div class="ni-title">S&P Global to acquire OpenZeppelin — enters onchain finance security</div>
+        <div class="ni-body">SPGI announced a definitive agreement to acquire OpenZeppelin, described as "the security standard for onchain finance." OpenZeppelin's smart contract audit and security tools are used across Ethereum, Solana and major L2 chains. The deal extends SPGI's risk assessment franchise into blockchain-native financial products — a direct application of its Ratings moat to crypto credit risk. Terms not disclosed. This is SPGI's first explicit move into onchain finance and signals a new TAM expansion vector beyond traditional capital markets.</div>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">Acquisition</span>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">New TAM signal</span>
+      </div>
+    </div>
+
+    <div class="news-item" style="border-left:3px solid var(--blue);margin-bottom:12px">
+      <div class="ni-icon" style="background:var(--blue-l)">📊</div>
+      <div>
+        <div class="ni-date">Sep 14, 2026</div>
+        <div class="ni-title">S&P Global leads Kaiko Series B extension to $110M — deepens crypto data alliance</div>
+        <div class="ni-body">SPGI led a Series B extension for Kaiko, a crypto market data provider, bringing the round to $110M total. Kaiko provides institutional-grade digital asset pricing, liquidity metrics and trade surveillance data. Combined with the OpenZeppelin deal, this marks two crypto-related moves in one week — signalling an intentional strategic push into digital asset infrastructure. The Kaiko data is expected to integrate with Capital IQ Pro and the Kensho AI platform.</div>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">Strategic investment</span>
+        <span class="ni-badge" style="background:var(--pu-l);color:var(--pu)">Crypto data</span>
+      </div>
+    </div>
+
+    <div class="news-item" style="border-left:3px solid var(--am-r);margin-bottom:12px">
+      <div class="ni-icon" style="background:var(--am-l)">🏦</div>
+      <div>
+        <div class="ni-date">Sep 3, 2026</div>
+        <div class="ni-title">Barclays Conference — CFO Aboaf outlines new Chief Commercial Officer structure; MI growing 10% in Enterprise Solutions</div>
+        <div class="ni-body">At the Barclays 24th Annual Global Financial Services Conference, CFO Eric Aboaf disclosed the creation of a new "Chief Commercial Officer" organisation to deepen client relationships and integrate product lines across divisions. Key MI data points: Enterprise Solutions grew 10% YoY; Kensho Data Platforms growing faster. API/LLM data usage up 5× QoQ; 500 MCP connectors active, up 50% QoQ; 500 customers using AI tools. The CCO org is the most significant structural signal since Saha's departure — it partially fills the MI commercial leadership gap without naming a formal President replacement.</div>
+        <span class="ni-badge" style="background:var(--am-l);color:var(--am)">Conference</span>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">Leadership update</span>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">AI adoption data</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--pu-l)">🏦</div>
+      <div>
+        <div class="ni-date">Aug 16–18, 2026</div>
+        <div class="ni-title">Bill Ackman / Pershing Square discloses new position in SPGI</div>
+        <div class="ni-body">Pershing Square disclosed initiating a position in S&P Global in Q2 2026, describing it as a business "we have admired for decades" bought at 19× earnings — its lowest valuation in five years. Ackman cited the February 2026 guidance miss and AI disruption fears as the entry opportunity. Previously owned in 2017. Stock rose on the news.</div>
+        <span class="ni-badge" style="background:var(--pu-l);color:var(--pu)">Institutional</span>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">Confidence signal</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--blue-l)">🤝</div>
+      <div>
+        <div class="ni-date">Aug 12, 2026</div>
+        <div class="ni-title">S&P Global expands collaboration with Microsoft — data integrated into Microsoft 365 Copilot</div>
+        <div class="ni-body">SPGI's AI-ready data, insights and analytics are now accessible inside Microsoft 365 Copilot and agentic experiences via the Kensho LLM-ready API (Deterministic Retrieval). Enables real-time, cited and traceable financial intelligence inside everyday enterprise workflows. Strategically counters the AI disruption narrative — SPGI becomes a data layer inside AI, not a target of it.</div>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">AI Strategy</span>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">Bull signal</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--gn-l)">💸</div>
+      <div>
+        <div class="ni-date">Aug 2026</div>
+        <div class="ni-title">Quarterly dividend of $0.97 per share declared · ex-date Aug 26, 2026</div>
+        <div class="ni-body">SPGI declared its Q3 2026 quarterly dividend of $0.97 per share. Annualised dividend of $3.88 per share. At a stock price of ~$418, the current dividend yield is approximately 0.93%. While modest as an income vehicle, the consistent dividend history and $7B buyback programme together represent a significant capital return commitment.</div>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">Dividend</span>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">Capital return</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--am-l)">🏗️</div>
+      <div>
+        <div class="ni-date">Jul 28, 2026</div>
+        <div class="ni-title">S&P Global to acquire datacenterHawk — AI infrastructure data play</div>
+        <div class="ni-body">SPGI signed a definitive agreement to acquire datacenterHawk, a leading provider of proprietary intelligence for global data center, fiber optic and related infrastructure markets. To be combined with 451 Research and energy forecasting assets inside S&P Global Energy. Expected to close H2 2026. Creates a comprehensive platform connecting AI infrastructure demand with power markets, grid constraints and supply chain data.</div>
+        <span class="ni-badge" style="background:var(--am-l);color:var(--am)">Acquisition</span>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">AI Infrastructure</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--gn-l)">📊</div>
+      <div>
+        <div class="ni-date">Jul 28, 2026</div>
+        <div class="ni-title">S&P 500 ETF breaches $1 trillion AUM — a historic first for Indices</div>
+        <div class="ni-body">The S&P 500 ETF became the first ETF in history to surpass $1 trillion in assets under management. SPGI earns basis-point fees on AUM benchmarked to its indices — this milestone directly increases Indices revenue with no incremental cost. Cheung: "We're incredibly proud to be part of that story." Indices margin expanded to 71.5% in Q2 2026.</div>
+        <span class="ni-badge" style="background:var(--gn-l);color:var(--gn-d)">Record milestone</span>
+        <span class="ni-badge" style="background:var(--blue-l);color:var(--blue)">Revenue tailwind</span>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="ni-icon" style="background:var(--rd-l)">⚠️</div>
+      <div>
+        <div class="ni-date">May 26, 2026</div>
+        <div class="ni-title">Saugata Saha departs as MI President and Chief Enterprise Data Officer</div>
+        <div class="ni-body">Saha, who led both Market Intelligence and the Enterprise Data Organisation, announced his departure effective July 30, 2026. No successor has been named for either the MI President or Chief Enterprise Data Officer role. The Enterprise Data Organisation was simultaneously folded into CTO Firdaus Bhathena's office. Management reaffirmed 2026 financial guidance alongside the announcement — a deliberate signal of continuity — but the dual-role gap remains SPGI's most significant unresolved management risk.</div>
+        <span class="ni-badge" style="background:var(--rd-l);color:var(--rd)">Leadership risk</span>
+        <span class="ni-badge" style="background:var(--am-l);color:var(--am)">Watch closely</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SEPTEMBER 2026 NEWS -->
+
+  </div>
+
+  <!-- ANALYST CONSENSUS -->
+  <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px">Analyst consensus</div>
+  <div class="analyst-strip">
+    <div class="an-card"><div class="an-firm">JPMorgan</div><div class="an-rating">Buy</div><div class="an-target">Price target: $555</div><div class="an-delta">Raised from $535</div></div>
+    <div class="an-card"><div class="an-firm">BMO Capital</div><div class="an-rating">Buy</div><div class="an-target">Price target: $565</div><div class="an-delta">Initiated post Q2</div></div>
+    <div class="an-card"><div class="an-firm">Street consensus</div><div class="an-rating">Strong Buy</div><div class="an-target">Mean target: $520.30</div><div class="an-delta">+28.4% upside · 24 analysts</div></div>
+  </div>
+
+  <div class="note-box" style="margin-top:4px"><b>Note:</b> Consensus mean target $520.30 vs current ~$404 implies <b>+28.4% upside</b>. GF Value $539.28 implies +33% upside. Stock now trades at 24.75× trailing P/E vs 5-year average of 36.8× and 3-year average of 39×. However, Zacks flags a Rank #5 (Strong Sell) based on negative earnings estimate revisions — a reminder that short-term earnings revision momentum differs from longer-term thesis quality. The MAP/BB framework's Step 4 verdict of 🟡 Fair sits between these extremes.</div>
+</section>
+
+</main>
+
+<script>
+/* ── THEME ── */
+let dark = false;
+function toggleTheme() {
+  dark = !dark;
+  document.body.classList.toggle('dark', dark);
+  document.getElementById('tbtn').textContent = dark ? '☾' : '☀';
+  rebuildCharts();
+}
+
+/* ── TABS ── */
+function sw(id) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ['co','fin','val','news'].forEach((t,i) => { if(t===id) document.querySelectorAll('.ntab')[i].classList.add('active'); });
+  if (id === 'fin') {
+    // Use two rAF passes: first lets the DOM paint, second lets layout complete
+    requestAnimationFrame(() => requestAnimationFrame(() => initFin()));
+  }
+  if (id === 'val') {
+    requestAnimationFrame(() => requestAnimationFrame(() => initVal()));
+  }
+}
+
+/* ── SEGMENT BARS ── */
+const segs = [
+  { name:'Ratings',            sub:'Highest margin · transaction-driven', color:'#0071e3', rev:35.7, gaap:64, adj:65 },
+  { name:'Market Intelligence',sub:'Largest by revenue · margin drag',    color:'#7d3fd1', rev:37.1, gaap:20, adj:34 },
+  { name:'Indices',            sub:'Smallest revenue · peak margin',      color:'#28a745', rev:14.0, gaap:69, adj:71 },
+  { name:'Energy',             sub:'Mid-tier both axes',                  color:'#c87d00', rev:13.2, gaap:41, adj:48 },
+];
+
+let curView = 'gaap';
+function setView(v, btn) {
+  curView = v;
+  document.querySelectorAll('.seg-tbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderSegs(v);
+}
+
+function renderSegs(view) {
+  const grid = document.getElementById('segGrid');
+  grid.innerHTML = '';
+  segs.forEach(s => {
+    const m = view === 'gaap' ? s.gaap : s.adj;
+    const row = document.createElement('div');
+    row.className = 'seg-row';
+    row.innerHTML = `
+      <div><div class="seg-nm">${s.name}</div><div class="seg-nt">${s.sub}</div></div>
+      <div class="seg-bars">
+        <div class="bar-r">
+          <div class="bar-lbl">Revenue</div>
+          <div class="bar-trk"><div class="bar-fill" style="background:${s.color}" data-t="${s.rev}"></div></div>
+          <div class="bar-pct">${s.rev}%</div>
+        </div>
+        <div class="bar-r">
+          <div class="bar-lbl">${view==='gaap'?'GAAP':'Adj.'} margin</div>
+          <div class="bar-trk"><div class="bar-fill stripe" style="background:${s.color}" data-t="${m}"></div></div>
+          <div class="bar-pct">${m}%</div>
+        </div>
+      </div>`;
+    grid.appendChild(row);
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.t + '%'; });
+  }));
+}
+renderSegs('gaap');
+
+/* ── CHARTS ── */
+const reg = {};
+function killAll() { Object.keys(reg).forEach(k => { try { reg[k].destroy(); } catch(e){} delete reg[k]; }); }
+
+function C() {
+  const d = document.body.classList.contains('dark');
+  return {
+    bl: d?'#0a84ff':'#0071e3', gn: d?'#30d158':'#28a745',
+    am: d?'#ffd60a':'#c87d00', rd: d?'#ff453a':'#dc2626',
+    gr: d?'#636366':'#aeaeb2', mu: d?'#636366':'#aeaeb2',
+    grid: d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)',
+    tb: d?'#1c1c1e':'#fff', tbd: d?'rgba(255,255,255,.1)':'rgba(0,0,0,.07)',
+    ttt: d?'#98989d':'#6e6e73', ttx: d?'#f5f5f7':'#1d1d1f',
+  };
+}
+
+function bO(fmt, yMax) {
+  const c = C();
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{ backgroundColor:c.tb, titleColor:c.ttt, bodyColor:c.ttx,
+    borderColor:c.tbd, borderWidth:1, cornerRadius:10, callbacks:{ label: ctx => fmt(ctx.parsed.y) } }
+  },
+  scales:{ y:{ display:false, suggestedMax:yMax }, x:{ grid:{display:false}, ticks:{ color:c.mu, font:{size:10} } } }
+  };
+}
+function TL(n,v,col) { return { type:'line', data:Array(n).fill(v), borderColor:col, borderDash:[4,3], borderWidth:1, pointRadius:0, fill:false }; }
+
+let finOk=false, valOk=false;
+
+function initFin() {
+  if (finOk) return; finOk=true;
+  renderAllFinCharts();
+}
+
+function renderAllFinCharts() {
+  // Destroy any existing charts first
+  ['c1','c2','c3','c4','c5','c6','c7','c8'].forEach(id => {
+    if (reg[id]) { try { reg[id].destroy(); } catch(e){} delete reg[id]; }
+  });
+
+  const c = C();
+  const yrs = ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+  // Colour each bar: blue for mid years, green for 2025 (best recent), amber for one-off distortion years
+  const mkLine = (id, labels, data, colors, fmt, yMax, thr) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Explicit dimensions — prevents zero-height render off-screen
+    el.width = el.parentElement.offsetWidth || 280;
+    el.height = 110;
+    const d = document.body.classList.contains('dark');
+    const ds = [{
+      type:'line', label:'Value', data, borderColor:c.bl,
+      backgroundColor: d ? 'rgba(10,132,255,0.13)' : 'rgba(0,113,227,0.09)',
+      fill:true, borderWidth:2, pointRadius:3.5, pointBackgroundColor:colors,
+      pointBorderColor:'transparent', tension:.35
+    }];
+    if (thr!==undefined) ds.push({type:'line',label:'Threshold',data:Array(labels.length).fill(thr),borderColor:c.rd,borderDash:[4,3],borderWidth:1.2,pointRadius:0,fill:false});
+    reg[id] = new Chart(el, {
+      type:'line', data:{labels, datasets:ds},
+      options:{
+        responsive:false, maintainAspectRatio:false,
+        animation:{ duration:600, easing:'easeOutQuart' },
+        plugins:{legend:{display:false}, tooltip:{backgroundColor:c.tb,titleColor:c.ttt,bodyColor:c.ttx,borderColor:c.tbd,borderWidth:1,cornerRadius:10,callbacks:{label:ctx=>fmt(ctx.parsed.y)}}},
+        scales:{y:{display:false,suggestedMax:yMax}, x:{grid:{display:false},ticks:{color:c.mu,font:{size:9},maxRotation:0}}}
+      }
+    });
+  };
+  const mkBar = (id, labels, data, cols, fmt, yMax, thr) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.width = el.parentElement.offsetWidth || 280;
+    el.height = 110;
+    const ds = [{data, backgroundColor:cols, barThickness:'flex', maxBarThickness:14, borderRadius:3}];
+    if (thr!==undefined) ds.push({type:'line',label:'Threshold',data:Array(labels.length).fill(thr),borderColor:c.rd,borderDash:[4,3],borderWidth:1.2,pointRadius:0,fill:false});
+    reg[id] = new Chart(el, {type:'bar', data:{labels,datasets:ds},
+      options:{
+        responsive:false, maintainAspectRatio:false,
+        animation:{ duration:600, easing:'easeOutQuart' },
+        plugins:{legend:{display:false}, tooltip:{backgroundColor:c.tb,titleColor:c.ttt,bodyColor:c.ttx,borderColor:c.tbd,borderWidth:1,cornerRadius:10,callbacks:{label:ctx=>fmt(ctx.parsed.y)}}},
+        scales:{y:{display:false,suggestedMax:yMax}, x:{grid:{display:false},ticks:{color:c.mu,font:{size:9},maxRotation:0}}}
+      }
+    });
+  };
+
+  // Point colors: special years get amber, 2025 gets green, rest get blue
+  const gm_cols = ['#0071e3','#ffd60a','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#28a745'];
+  const op_cols = ['#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#c87d00','#0071e3','#28a745'];
+  const nm_cols = ['#0071e3','#ffd60a','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#c87d00','#0071e3','#28a745'];
+  const eps_cols = ['#0071e3','#ffd60a','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#c87d00','#c87d00','#0071e3','#28a745'];
+  const fcf_cols = ['#c87d00','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#28a745'];
+  const std_cols = Array(11).fill('#0071e3'); std_cols[10] = '#28a745';
+
+  // 1. Gross margin (line, 10yr)
+  mkLine('c1', yrs, [67.7,68.7,72.1,70.6,70.5,71.9,73.7,66.4,66.9,69.1,70.2], gm_cols, v=>v.toFixed(1)+'%', 80, 30);
+
+  // 2. Operating profit (line, 10yr)
+  mkLine('c2', yrs, [1.61,1.95,2.00,2.21,2.59,3.62,4.22,4.94,4.02,5.58,6.44], op_cols, v=>'$'+v.toFixed(2)+'B', 7.5, null);
+
+  // 3. ROE (N/A)
+  reg.c3 = new Chart(document.getElementById('c3'),{type:'bar',data:{labels:['N/A — merger distortion'],datasets:[{data:[0],backgroundColor:[c.gr],barThickness:30,borderRadius:4}]},options:bO(()=>'N/A',20)});
+
+  // 4. D/E (bar, post-merger years only: 2022–2025)
+  mkBar('c4', ['2022','2023','2024','2025'], [0.47,0.39,0.38,0.38],
+    ['#0071e3','#0071e3','#0071e3','#28a745'], v=>v.toFixed(2)+'x', 1.5, 1.0);
+
+  // 5. FCF (line, 10yr)
+  mkLine('c5', yrs, [0.09,1.44,1.89,1.95,2.66,3.49,3.56,2.51,3.57,5.57,5.46], fcf_cols, v=>'$'+v.toFixed(2)+'B', 6.5, null);
+
+  // 6. Net margin (line, 10yr)
+  mkLine('c6', yrs, [21.8,37.3,24.7,31.3,31.7,31.5,36.4,29.1,21.0,27.1,29.1], nm_cols, v=>v.toFixed(1)+'%', 45, 15);
+
+  // 7. EPS (line, 10yr)
+  mkLine('c7', yrs, [4.32,7.64,5.48,7.73,8.60,9.66,12.51,9.69,8.23,12.35,14.66], eps_cols, v=>'$'+v.toFixed(2), 16, null);
+
+  // 8. Interest coverage (bar, 2020–2025 comparable post-debt restructure)
+  mkBar('c8', ['2020','2021','2022','2023','2024','2025'], [35.4,28.1,12.3,17.8,22.0,22.8],
+    ['#0071e3','#0071e3','#0071e3','#0071e3','#0071e3','#28a745'], v=>v.toFixed(1)+'x', 40, 4.0);
+}
+
+function initVal() {
+  if (valOk) return; valOk=true;
+  const c = C();
+  const d = document.body.classList.contains('dark');
+  reg.hc=new Chart(document.getElementById('hc'),{
+    type:'line',
+    data:{
+      labels:['2023 Q2','2024 Q1','2024 Q3','2025 Q1','Feb 2026','Jun 2026','Sep 28'],
+      datasets:[
+        {label:'Trailing P/E',data:[55.6,42.1,36.8,34.9,25.5,25.6,24.75],borderColor:c.bl,backgroundColor:d?'rgba(10,132,255,0.1)':'rgba(0,113,227,0.07)',fill:true,borderWidth:2.5,pointRadius:4,pointBackgroundColor:c.bl,tension:.35},
+        {label:'10yr avg low',data:Array(7).fill(32.7),borderColor:c.mu,borderDash:[5,4],borderWidth:1,pointRadius:0},
+        {label:'10yr avg high',data:Array(7).fill(37.7),borderColor:c.mu,borderDash:[2,3],borderWidth:1,pointRadius:0},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:c.tb,titleColor:c.ttt,bodyColor:c.ttx,borderColor:c.tbd,borderWidth:1,cornerRadius:10,callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'x'}}},
+      scales:{y:{ticks:{color:c.mu,font:{size:11},callback:v=>v+'x'},grid:{color:c.grid}},x:{grid:{display:false},ticks:{color:c.mu,font:{size:11}}}}
+    }
+  });
+}
+
+function rebuildCharts() {
+  killAll(); finOk=false; valOk=false;
+  // Also rebuild revenue donut on theme switch
+  if (revTypeChartInst) { try { revTypeChartInst.destroy(); } catch(e){} revTypeChartInst = null; }
+  const a = document.querySelector('.sec.active');
+  if (a&&a.id==='fin') requestAnimationFrame(() => requestAnimationFrame(() => initFin()));
+  if (a&&a.id==='val') requestAnimationFrame(() => requestAnimationFrame(() => initVal()));
+  if (a&&a.id==='co') {
+    const revType = document.getElementById('rev-type');
+    if (revType && revType.style.display !== 'none') requestAnimationFrame(() => requestAnimationFrame(() => renderRevType()));
+  }
+}
+
+/* ── REVENUE VIEW CHARTS ── */
+const revTypeData = [
+  { label:'Subscriptions',             pct:51, val:'$7,865M', color:'#0071e3', trend:'dn', trendLbl:'vs 55% (2023)' },
+  { label:'Non-sub / Transaction',     pct:21, val:'$3,144M', color:'#30d158', trend:'up', trendLbl:'vs 17% (2023)' },
+  { label:'Non-transaction (Ratings)', pct:13, val:'$2,054M', color:'#7d3fd1', trend:'flat', trendLbl:'stable' },
+  { label:'Asset-linked fees',         pct:8,  val:'$1,206M', color:'#ff9f0a', trend:'up', trendLbl:'vs 7% (2023)' },
+  { label:'Recurring variable',        pct:4,  val:'$623M',   color:'#5ac8fa', trend:'flat', trendLbl:'stable' },
+  { label:'Usage-based royalties',     pct:3,  val:'$444M',   color:'#bf5af2', trend:'flat', trendLbl:'stable' },
+];
+
+const revGeoData = [
+  { name:'United States', flag:'🇺🇸', pct:61, val:'$9,322M', yoy:'+7.9%', prev2024:'$8,640M', prev2023:'$7,542M', color:'#0071e3' },
+  { name:'Europe',        flag:'🇪🇺', pct:23, val:'$3,531M', yoy:'+8.5%', prev2024:'$3,256M', prev2023:'$2,822M', color:'#30d158' },
+  { name:'Asia',          flag:'🌏', pct:11, val:'$1,640M', yoy:'+10.0%', prev2024:'$1,491M', prev2023:'$1,375M', color:'#ff9f0a' },
+  { name:'Rest of World', flag:'🌍', pct:5,  val:'$843M',   yoy:'+2.7%', prev2024:'$821M',   prev2023:'$758M',   color:'#bf5af2' },
+];
+
+let revTypeChartInst = null;
+
+function setRevView(view, btn) {
+  document.querySelectorAll('.rev-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('rev-type').style.display = view === 'type' ? '' : 'none';
+  document.getElementById('rev-geo').style.display  = view === 'geo'  ? '' : 'none';
+  if (view === 'type') renderRevType();
+  if (view === 'geo')  renderRevGeo();
+}
+
+function renderRevType() {
+  const legend = document.getElementById('revTypeLegend');
+  legend.innerHTML = '';
+  revTypeData.forEach((d,i) => {
+    const tCls = d.trend === 'up' ? 'trend-up' : d.trend === 'dn' ? 'trend-dn' : 'trend-flat';
+    const row = document.createElement('div');
+    row.className = 'donut-leg-row';
+    row.innerHTML = `
+      <span class="donut-leg-dot" style="background:${d.color}"></span>
+      <span class="donut-leg-label">${d.label}</span>
+      <div class="donut-leg-bar-wrap"><div class="donut-leg-bar" style="background:${d.color};width:${d.pct}%"></div></div>
+      <span class="donut-leg-pct">${d.pct}%</span>
+      <span class="donut-leg-val">${d.val}</span>
+      <span class="trend ${tCls}">${d.trendLbl}</span>`;
+    legend.appendChild(row);
+  });
+
+  const c = document.getElementById('revTypeChart');
+  if (revTypeChartInst) { try { revTypeChartInst.destroy(); } catch(e){} }
+  const isDk = document.body.classList.contains('dark');
+  revTypeChartInst = new Chart(c, {
+    type: 'doughnut',
+    data: {
+      labels: revTypeData.map(d => d.label),
+      datasets: [{
+        data: revTypeData.map(d => d.pct),
+        backgroundColor: revTypeData.map(d => d.color),
+        borderWidth: 3,
+        borderColor: isDk ? '#1c1c1e' : '#ffffff',
+        hoverBorderWidth: 0,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDk ? '#1c1c1e' : '#fff',
+          titleColor: isDk ? '#98989d' : '#6e6e73',
+          bodyColor: isDk ? '#f5f5f7' : '#1d1d1f',
+          borderColor: isDk ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.07)',
+          borderWidth: 1, cornerRadius: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` }
+        }
+      },
+      animation: { animateRotate: true, duration: 700, easing: 'easeOutQuart' }
+    }
+  });
+}
+
+function renderRevGeo() {
+  const grid = document.getElementById('revGeoGrid');
+  grid.innerHTML = '';
+  revGeoData.forEach(d => {
+    const isPos = d.yoy.startsWith('+');
+    const trendColor = isPos ? 'var(--gn-d)' : 'var(--rd)';
+    const row = document.createElement('div');
+    row.className = 'geo-row';
+    row.innerHTML = `
+      <div class="geo-header">
+        <span class="geo-name">${d.flag} ${d.name}</span>
+        <div class="geo-vals">
+          <span class="geo-pct">${d.pct}%</span>
+          <span class="geo-abs">${d.val}</span>
+          <span class="geo-trend" style="color:${trendColor}">${d.yoy} YoY</span>
+        </div>
+      </div>
+      <div class="geo-track">
+        <div class="geo-fill" style="background:${d.color}" data-w="${d.pct}%"></div>
+      </div>
+      <div class="trend-row">
+        <span>2023: ${d.prev2023}</span>
+        <span class="trend-arr">→</span>
+        <span>2024: ${d.prev2024}</span>
+        <span class="trend-arr">→</span>
+        <span style="color:var(--tx);font-weight:600">2025: ${d.val}</span>
+      </div>`;
+    grid.appendChild(row);
+  });
+  // Animate bars
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.geo-fill').forEach(el => { el.style.width = el.dataset.w; });
+  }));
+}
+
+// Auto-init revenue type chart when Overview tab is shown
+// Patch: init on first load since co is the default active section
+requestAnimationFrame(() => requestAnimationFrame(() => renderRevType()));
+</script>
+</body>
+</html>

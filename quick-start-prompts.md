@@ -80,4 +80,4 @@ Compare this stock to its top 3 competitors
 
 ---
 
-*WIN Stock Analysis Framework · github.com/enitsuaf-k/personal-finance-investing*
+*WIN Stock Analysis Framework · github.com/enitsuaf-k/WIN-Investing*

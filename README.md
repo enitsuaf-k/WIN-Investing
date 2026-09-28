@@ -3,6 +3,7 @@
 Hey girls! 👋
 
 Welcome to the **WIN Stock Analysis Framework** — a structured, step-by-step approach to researching any stock using Claude AI. This repo has everything you need to run your own professional-grade equity research and get a beautiful interactive dashboard at the end of it.
+Credit: This framework is adapted from SG Budget Babe's proprietary Millionaire Accelerator Program (MAP), with further enhancements I have added.
 
 No finance degree needed. Just curiosity and a Claude account. 💪
 

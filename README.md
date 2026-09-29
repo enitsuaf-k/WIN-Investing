@@ -2,8 +2,7 @@
 
 Hey girls! 👋
 
-Welcome to the **WIN Stock Analysis Framework** — a structured, step-by-step approach to researching any stock using Claude AI. This repo has everything you need to run your own professional-grade equity research and get a beautiful interactive dashboard at the end of it.
-Credit: This framework is adapted from SG Budget Babe's proprietary Millionaire Accelerator Program (MAP), with further enhancements I have added.
+Welcome to the **WIN Stock Analysis Framework** — a structured, step-by-step approach to researching any stock using Claude AI. This repo has everything you need to run your own professional-grade equity research and get a beautiful interactive dashboard at the end.
 
 No finance degree needed. Just curiosity and a Claude account. 💪
 
@@ -11,27 +10,19 @@ No finance degree needed. Just curiosity and a Claude account. 💪
 
 ## What is this?
 
-The WIN framework walks you through 4 steps of stock analysis — from a quick qualitative gut-check all the way to a full valuation deep-dive. At the end, Claude builds you a live, interactive research dashboard (like the SPGI example below) that you can open in any browser, bookmark, and revisit anytime.
+The WIN framework walks you through 4 steps of stock analysis — from a quick qualitative gut-check all the way to a full valuation deep-dive. At the end, Claude builds you a live, interactive research dashboard that you can open in any browser, bookmark, and revisit anytime.
 
-Think of it as having a personal Wall Street analyst in your pocket — one that explains everything in plain English and stops at each step to ask if you want to continue.
+**What you get at the end — a 4-tab interactive dashboard:**
 
-**What you get at the end:**
+| Tab | What's inside |
+|---|---|
+| **Company Overview** | History timeline · Leadership cards · Segment revenue vs margin chart · Revenue by type (donut chart) · Revenue by geography · How each segment makes money (collapsible) · Economic moat by segment · Competitors table |
+| **Financials** | 8-point scorecard with PASS/FAIL per metric · 10-year Chart.js charts for each metric · Data notes for distortion years · Total score (X out of 8) |
+| **Valuation** | Current P/E, forward P/E, EV/EBITDA snapshot · Peer comparison table · Relative multiple bar charts · Bear/base/bull scenarios · Multi-bagger test · Verdict 🟢🟡🔴 · Risk register |
+| **Latest News** | Earnings call hero card · Segment performance · Management Q&A · Recent news items (newest first) · Analyst consensus |
 
-- 📋 A qualitative scorecard (does this stock pass the basics?)
-- 📈 10-year financial history across 8 key metrics
-- 🏰 Deep-dive on the business model, moat, and leadership
-- 💰 Full valuation with peer comparison and scenario modelling
-- 📰 Latest news and earnings call highlights — all in one dashboard
-
----
-
-## Live example
-
-Here's what a finished dashboard looks like — this one is for **S&P Global (SPGI)**:
-
+**Live example — SPGI (S&P Global):**
 🔗 [Open SPGI Dashboard](https://claude.ai/artifact/N1zmzeKhMdp8k4mfgchKFb)
-
-You can use this as your reference for what to expect when you run the framework on your own stock.
 
 ---
 
@@ -39,94 +30,97 @@ You can use this as your reference for what to expect when you run the framework
 
 | File | What it is |
 |---|---|
-| `stock-analysis-dash.skill` | The Claude skill — install this first |
-| `SPGI_dashboard.html` | The SPGI example dashboard (open in any browser) |
+| `stock-analysis-dash.skill` | The Claude skill — **install this first** |
+| `spgi_dashboard_v5.html` | The SPGI reference dashboard (open in any browser) |
 | `quick-start-prompts.md` | Copy-paste prompts to get started immediately |
+| `README.md` | This guide |
 
 ---
 
 ## How to get started
 
-### Step 1 — Make sure you have Claude Cowork
-You'll need access to **Claude Cowork** (claude.ai). A Pro or Team plan works best since the analysis runs across multiple steps and generates a large HTML file at the end.
+### Step 1 — Install the skill into Claude
+1. Download `stock-analysis-dash.skill` from this repo
+2. Open **claude.ai** in your browser
+3. Go to your profile icon (bottom left) → **Settings** → **Skills**
+4. Click **Add skill** → upload the `.skill` file
+5. The skill is now active in all your Claude conversations ✅
 
-### Step 2 — Install the skill
-1. Download `stock-analysis-dash.skill` from this repo (click the file → click the download button)
-2. Open Claude Cowork
-3. Drag and drop the `.skill` file into Claude — or go to **Skills → Add skill → Upload**
-4. Done! The skill is now installed in your Claude profile
-
-### Step 3 — Pick your stock and go
-In Claude, type:
-
-```
-/StockAnalysisDash NVDA
-```
-
-Replace `NVDA` with any ticker you want to research. Singapore stocks work too:
+### Step 2 — Pick your stock and type this in a new Claude chat
 
 ```
 /StockAnalysisDash DBS.SI
-/StockAnalysisDash 9988.HK
 ```
 
-### Step 4 — Follow the gates
-The framework stops after each step and waits for you to say **yes** before continuing. This is intentional — it gives you time to read, question, and decide if you want to go deeper.
+Replace `DBS.SI` with any ticker. Works for SGX, US, and HK stocks:
 
 ```
-Step 1 → Qualitative scorecard     → Claude stops, you review
-Step 2 → 8-point financials        → Claude stops, you review  
-Step 3 → Business model deep-dive  → Claude stops, you review
-Step 4 → Full valuation + dashboard → Final output 🎉
+/StockAnalysisDash OCBC.SI      ← Singapore
+/StockAnalysisDash NVDA         ← US
+/StockAnalysisDash 0700.HK      ← Hong Kong
 ```
 
-You can also run individual steps if you just want a quick check:
+### Step 3 — Follow the 4 gates
+
+Claude stops after each step and waits for you to say **yes**:
 
 ```
-Run Step 1 on OCBC.SI
-Run Step 2 on MSCI
-Do the valuation for Netflix
+You: /StockAnalysisDash DBS.SI
+
+Step 1 → Qualitative scorecard (5 criteria, pass/caution/fail)
+         ↳ Claude STOPS — read it, then say "yes" to continue
+
+Step 2 → 8-point financials (10-year charts, PASS/FAIL per metric)
+         ↳ Claude STOPS — review, then say "yes" to continue
+
+Step 3 → BB deep dive (business model, moat, leadership, TAM)
+         ↳ Claude STOPS — Claude asks "Want me to calculate valuations?"
+
+Step 4 → Full 4-tab dashboard built and published 🎉
 ```
 
-### Step 5 — Refresh your dashboard anytime
-Once your dashboard is built, you can update it with the latest prices and news anytime:
+### Step 4 — Keep it up to date
+
+Once your dashboard is built, refresh it anytime with:
 
 ```
-Refresh the dashboard with latest data
+Refresh the dashboard with the latest data
 ```
 
-Claude will pull current prices, update all the valuation multiples, refresh the peer comparison, and republish the dashboard to the same link — no new link needed.
+Claude will update prices, recalculate all peer multiples, add new news items, and republish to the same link.
 
 ---
 
-## The 4-step framework
+## Tips from the community 💡
 
-| Step | What it covers | Output |
+**Start with stocks you own or follow** — the analysis hits differently when you have skin in the game.
+
+**Don't skip Step 3** — the qualitative deep dive is where the real edge is. P/E ratios are public. Understanding *why* a business has pricing power isn't.
+
+**The verdict is a starting point** — always cross-reference with your own risk tolerance, portfolio sizing, and time horizon.
+
+**Bookmark your dashboard link** — it's permanent. Check back after each quarterly earnings.
+
+**Test on a stock you already know well** — DBS, OCBC, or a US stock you follow. You'll be able to spot immediately if something looks off.
+
+---
+
+## Tickers cheat sheet
+
+| Market | Format | Examples |
 |---|---|---|
-| **Step 1** | Large market? Growing? Liquid? Fair valuation? Well covered? | Traffic-light scorecard |
-| **Step 2** | 10-year history: margins, profitability, debt, cash flow, EPS | 8-point pass/fail scorecard with charts |
-| **Step 3** | Business model, moat, leadership, TAM, competition | Collapsible deep-dive cards |
-| **Step 4** | Current multiples, peer comparison, scenarios, multi-bagger test | Interactive dashboard + verdict |
+| Singapore (SGX) | TICKER.SI | `DBS.SI` `OCBC.SI` `MIT.SI` |
+| US (NYSE/NASDAQ) | Just ticker | `NVDA` `AAPL` `MSCI` |
+| Hong Kong (HKEX) | NUMBER.HK | `9988.HK` `0700.HK` |
+| UK (LSE) | TICKER.L | `SHEL.L` `HSBA.L` |
 
 ---
 
-## Tips from the community
+## Questions or issues?
 
-💡 **Start with stocks you already own or are curious about** — the analysis is much more interesting when you have skin in the game.
+Maintained by **Faustine** — drop me a message in the group if something doesn't look right or you have ideas to make this better. 🙌
 
-💡 **Don't skip Step 3** — the qualitative deep-dive is where you'll find the real edge. Margins and P/E ratios are public information. Understanding *why* a business has pricing power isn't.
-
-💡 **The verdict is a starting point, not a buy signal** — always cross-reference with your own risk tolerance, portfolio allocation, and investment horizon.
-
-💡 **Save your dashboard link** — each dashboard gets a permanent URL. Bookmark it and check back after each quarterly earnings.
-
-💡 **Singapore stocks work great** — the framework handles SGX, HKEX, and NYSE/NASDAQ tickers. Just add `.SI` for SGX stocks (e.g. `DBS.SI`) and `.HK` for HKEX.
-
----
-
-## Questions or improvements?
-
-Maintained by **Faustine** — drop me a message in the group if something doesn't work or if you have ideas to make this better. This is a living tool and will get updated as the framework evolves. 🙌
+The skill will be updated as the framework evolves — just re-download `stock-analysis-dash.skill` from this repo and reinstall it in Claude Settings to get the latest version.
 
 ---
 
